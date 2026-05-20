@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     container_name: yysuni-blog
     ports:
+      # 宝塔反向代理方案：容器内部 2025，宝塔从 443 → 127.0.0.1:2025
+      # 如需直接暴露 443 可改为 "443:2025"，但需在宝塔配置 SSL
       - "2025:2025"
     volumes:
       # 持久化数据目录
