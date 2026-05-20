@@ -5,8 +5,8 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm (固定版本以匹配本地环境)
+RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
@@ -28,8 +28,8 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm (固定版本以匹配本地环境)
+RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
