@@ -98,9 +98,214 @@ YYsuni Blog 是一个基于 **Next.js** 构建的现代化个人博客系统，�
 
 ### 环境要求
 
-- **Node.js**: 22.x 或更高版本
-- **pnpm**: 最新版
-- **Docker**（可选，用于容器部署）
+本项目依赖 **better-sqlite3** 原生模块，安装时需要编译 C++ 原生代码，因此对系统环境有一定要求。
+
+#### 通用要求
+
+| 环境 | 版本要求 | 说明 |
+|------|----------|------|
+| **Node.js** | 22.x 或更高版本 | 推荐使用 [nvm](https://github.com/nvm-sh/nvm) 管理版本 |
+| **pnpm** | 最新版 | 安装后执行 `corepack enable && corepack prepare pnpm@11.1.3 --activate` |
+| **Python 3** | 3.8 或更高版本 | **必须**，用于 `node-gyp` 编译原生模块 |
+| **C/C++ 编译器** | 支持 C++20 标准 | 用于编译 `better-sqlite3` 原生模块 |
+| **make** | — | 构建工具，GCC 工具链的一部分 |
+| **Docker** | 最新版（可选） | 用于容器化部署 |
+
+> ⚠️ **重要**：`better-sqlite3` 是一个原生 C++ 模块，安装时会通过 `node-gyp` 自动编译。因此系统必须安装 **Python 3.8+** 和 **支持 C++20 的编译器**，否则 `pnpm install` 将失败。
+
+#### 📦 Linux 各发行版依赖安装指南
+
+以下是在常见 Linux 云服务器上安装所需依赖的命令。
+
+<details>
+<summary><b>🟢 CentOS 8 / Rocky Linux 8 / AlmaLinux 8</b></summary>
+
+> CentOS 8 已停止维护，需先将 yum 源迁移至 vault.centos.org。
+
+```bash
+# 1. 修复 CentOS 8 已弃用的 yum 源（CentOS 8 专用）
+sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+
+# 2. 安装 EPEL 和 PowerTools 仓库
+dnf install -y epel-release
+dnf config-manager --set-enabled powertools  # CentOS 8
+# Rocky Linux 8 请用：dnf config-manager --set-enabled powertools
+# AlmaLinux 8 请用：dnf config-manager --set-enabled powertools
+
+# 3. 安装 Python 3.8+
+dnf install -y python39 python39-pip
+# 验证
+python3.9 --version
+
+# 4. 安装 GCC 11+（支持 C++20）
+# CentOS 8 默认 GCC 8.5 不支持完整的 C++20，需安装 GCC Toolset
+dnf install -y gcc-toolset-11-gcc gcc-toolset-11-gcc-c++
+# 启用 GCC 11（每次新终端需执行）
+source /opt/rh/gcc-toolset-11/enable
+# 验证
+gcc --version   # 应显示 gcc 11.x
+
+# 5. 安装 make 及其他构建工具
+dnf install -y make
+
+# 6. 安装 Node.js 22.x
+curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+dnf install -y nodejs
+node --version
+
+# 7. 配置 pnpm
+corepack enable && corepack prepare pnpm@11.1.3 --activate
+pnpm --version
+
+# 8. （可选）安装 Docker
+dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+systemctl enable docker && systemctl start docker
+docker --version
+```
+
+> 💡 **提示**：每次打开新终端编译项目前，需先执行 `source /opt/rh/gcc-toolset-11/enable` 启用 GCC 11。
+> 如需全局生效，可将该命令追加到 `~/.bashrc`。
+</details>
+
+<details>
+<summary><b>🟢 CentOS 7</b></summary>
+
+> CentOS 7 的默认 GCC 4.8 无法编译 C++20 代码，需安装 devtoolset。
+
+```bash
+# 1. 安装 SCL 仓库
+yum install -y centos-release-scl
+
+# 2. 安装 Python 3.8+
+yum install -y rh-python38
+scl enable rh-python38 bash
+python3 --version
+
+# 3. 安装 GCC 11（devtoolset-11）
+yum install -y devtoolset-11-gcc devtoolset-11-gcc-c++
+scl enable devtoolset-11 bash
+gcc --version   # 应显示 gcc 11.x
+
+# 4. 安装 make 及其他工具
+yum install -y make
+
+# 5. 安装 Node.js 22.x
+curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+yum install -y nodejs
+node --version
+
+# 6. 配置 pnpm
+corepack enable && corepack prepare pnpm@11.1.3 --activate
+pnpm --version
+```
+
+> 💡 **提示**：使用 `scl enable` 启动的 shell 仅在当前会话有效。
+> 建议在 `~/.bashrc` 末尾添加：`source /opt/rh/devtoolset-11/enable`。
+</details>
+
+<details>
+<summary><b>🟢 Ubuntu / Debian</b></summary>
+
+```bash
+# 1. 更新包索引
+apt update && apt upgrade -y
+
+# 2. 安装 Python 3.8+ 及构建工具
+apt install -y python3 python3-pip
+
+# 3. 安装 GCC 及相关工具（Ubuntu 22.04+ 默认 GCC 11+，已支持 C++20）
+apt install -y build-essential gcc g++ make
+gcc --version
+
+# 4. 安装 Node.js 22.x
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+apt install -y nodejs
+node --version
+
+# 5. 配置 pnpm
+corepack enable && corepack prepare pnpm@11.1.3 --activate
+pnpm --version
+
+# 6. （可选）安装 Docker
+apt install -y docker.io docker-compose-v2
+systemctl enable docker && systemctl start docker
+```
+
+> 💡 **提示**：Ubuntu 22.04 及以上版本的默认 GCC 版本已足够，无需额外配置。
+> 如果使用 Ubuntu 20.04（GCC 9.x），建议先升级 GCC：`apt install -y gcc-11 g++-11`。
+</details>
+
+<details>
+<summary><b>🟢 Fedora</b></summary>
+
+```bash
+# 1. 安装 Python 及构建工具
+dnf install -y python3 python3-pip gcc gcc-c++ make
+
+# 2. 安装 Node.js 22.x
+curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+dnf install -y nodejs
+node --version
+
+# 3. 配置 pnpm
+corepack enable && corepack prepare pnpm@11.1.3 --activate
+
+# 4. （可选）安装 Docker
+dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+systemctl enable docker && systemctl start docker
+```
+
+> 💡 Fedora 默认 GCC 版本较高，直接安装即可。
+</details>
+
+<details>
+<summary><b>🟢 Alpine Linux（Docker 基础镜像）</b></summary>
+
+> Alpine 默认使用 musl libc 而非 glibc，部分 Node.js 原生模块可能存在兼容性问题。
+> 本项目 Docker 镜像基于 `node:22-alpine`，已内置所需依赖，仅作参考。
+
+```bash
+# 安装构建依赖（Dockerfile 中已包含）
+apk add --no-cache python3 py3-pip g++ make
+```
+</details>
+
+#### 🐳 使用 Docker 部署（推荐——彻底规避环境问题）
+
+如果不想在宿主机安装编译依赖，**强烈建议直接使用 Docker 部署**，Docker 会自动在隔离的构建环境中处理所有依赖。
+
+> ⚠️ **重要**：如果 Docker 构建时报环境依赖错误（如 `python3 not found` 或 `g++: command not found`），请确保你使用的 Dockerfile 中**已包含编译依赖安装步骤**：
+> ```dockerfile
+> # 在 pnpm install 之前必须安装以下依赖
+> RUN apk add --no-cache python3 py3-pip g++ make
+> ```
+> 这是构建 `better-sqlite3` 原生模块所必需的。请检查 `Dockerfile` 中是否已有上述命令。
+
+```bash
+# 构建并启动（会自动安装所有环境依赖）
+docker compose up -d
+
+# 查看构建日志
+docker compose logs -f
+
+# 停止服务
+docker compose down
+```
+
+> 💡 **排查 Docker 构建失败的常用命令**：
+> ```bash
+> # 查看详细构建日志
+> docker compose logs -f
+>
+> # 清理缓存后重新构建（避免缓存导致的问题）
+> docker compose build --no-cache
+>
+> # 如果构建成功但运行报错，查看容器状态
+> docker compose ps
+> docker compose logs blog
+> ```
 
 ### 本地开发
 

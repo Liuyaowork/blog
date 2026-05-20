@@ -8,6 +8,10 @@ WORKDIR /app
 # Install pnpm (固定版本以匹配本地环境)
 RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
 
+# Install build dependencies for native modules (better-sqlite3 需要 node-gyp 编译)
+# python3, g++, make 是编译 better-sqlite3 原生 C++ 模块的必需依赖
+RUN apk add --no-cache python3 py3-pip g++ make
+
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml* .npmrc* ./
