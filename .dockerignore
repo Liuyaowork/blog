@@ -4,6 +4,10 @@ node_modules
 *.md
 .DS_Store
 *.local
-data
+data/blog.db
+data/blog.db-shm
+data/blog.db-wal
+data/images
+data/blogs
 .env.local
 .env*.local
