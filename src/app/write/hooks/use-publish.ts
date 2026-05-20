@@ -1,5 +1,4 @@
-import { useCallback } from 'react'
-import { readFileAsText } from '@/lib/file-utils'
+import { useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import { pushBlog } from '../services/push-blog'
 import { deleteBlog } from '../services/delete-blog'
@@ -8,15 +7,12 @@ import { useAuthStore } from '@/hooks/use-auth'
 
 export function usePublish() {
 	const { loading, setLoading, form, cover, images, mode, originalSlug } = useWriteStore()
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuth, checkAuth } = useAuthStore()
 
-	const onChoosePrivateKey = useCallback(
-		async (file: File) => {
-			const pem = await readFileAsText(file)
-			setPrivateKey(pem)
-		},
-		[setPrivateKey]
-	)
+	// 每次进入写页面时检查登录状态
+	useEffect(() => {
+		checkAuth()
+	}, [checkAuth])
 
 	const onPublish = useCallback(async () => {
 		try {
@@ -59,7 +55,6 @@ export function usePublish() {
 	return {
 		isAuth,
 		loading,
-		onChoosePrivateKey,
 		onPublish,
 		onDelete
 	}

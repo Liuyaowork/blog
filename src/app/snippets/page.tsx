@@ -21,11 +21,14 @@ export default function Page() {
 	const [isManageOpen, setIsManageOpen] = useState(false)
 	const [draftSnippets, setDraftSnippets] = useState<string[]>([])
 	const [newSnippet, setNewSnippet] = useState('')
-	const keyInputRef = useRef<HTMLInputElement>(null)
 
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuth, checkAuth } = useAuthStore()
 	const { siteContent } = useConfigStore()
 	const hideEditButton = siteContent.hideEditButton ?? false
+
+	useEffect(() => {
+		checkAuth()
+	}, [checkAuth])
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -121,18 +124,6 @@ export default function Page() {
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const file = e.target.files?.[0]
-					if (file) await handleChoosePrivateKey(file)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
-
 			<div className='flex min-h-[70vh] flex-col items-center justify-center px-6 py-24'>
 				<div className='w-full max-w-3xl text-center'>
 					<p className='text-2xl leading-relaxed font-semibold'>{currentSnippet || '无'}</p>

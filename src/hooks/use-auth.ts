@@ -1,54 +1,33 @@
 import { create } from 'zustand'
-import { clearAllAuthCache, getAuthToken as getToken, hasAuth as checkAuth, getPemFromCache, savePemToCache } from '@/lib/auth'
-import { useConfigStore } from '@/app/(home)/stores/config-store'
-interface AuthStore {
-	// State
-	isAuth: boolean
-	privateKey: string | null
 
-	// Actions
-	setPrivateKey: (key: string) => void
-	clearAuth: () => void
-	refreshAuthState: () => void
-	getAuthToken: () => Promise<string>
+interface AuthStore {
+	isAuth: boolean
+	checkAuth: () => Promise<void>
+	logout: () => Promise<void>
 }
 
-export const useAuthStore = create<AuthStore>((set, get) => ({
+export const useAuthStore = create<AuthStore>((set) => ({
 	isAuth: false,
-	privateKey: null,
 
-	setPrivateKey: async (key: string) => {
-		set({ isAuth: true, privateKey: key })
-		const { siteContent } = useConfigStore.getState()
-		if (siteContent?.isCachePem) {
-			await savePemToCache(key)
+	checkAuth: async () => {
+		try {
+			const res = await fetch('/api/auth', { method: 'GET' })
+			const data = await res.json()
+			set({ isAuth: data.authenticated === true })
+		} catch {
+			set({ isAuth: false })
 		}
 	},
 
-	clearAuth: () => {
-		clearAllAuthCache()
-		set({ isAuth: false })
-	},
-
-	refreshAuthState: async () => {
-		set({ isAuth: await checkAuth() })
-	},
-
-	getAuthToken: async () => {
-		const token = await getToken()
-		get().refreshAuthState()
-		return token
+	logout: async () => {
+		try {
+			await fetch('/api/auth', { method: 'DELETE' })
+			set({ isAuth: false })
+		} catch {
+			set({ isAuth: false })
+		}
 	}
 }))
 
-getPemFromCache().then((key) => {
-	if (key) {
-		useAuthStore.setState({ privateKey: key })
-	}
-})
-
-checkAuth().then((isAuth) => {
-	if (isAuth) {
-		useAuthStore.setState({ isAuth })
-	}
-})
+// 初始化时检查登录状态
+useAuthStore.getState().checkAuth()

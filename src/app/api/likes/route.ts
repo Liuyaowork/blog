@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sqlite, initDatabase } from '@/lib/db'
-
-initDatabase()
+import { sqlite } from '@/lib/db'
 
 const RATE_LIMIT_MS = 24 * 60 * 60 * 1000 // 24小时
 

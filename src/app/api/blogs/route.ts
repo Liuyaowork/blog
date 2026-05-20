@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sqlite, initDatabase } from '@/lib/db'
+import { sqlite } from '@/lib/db'
 import { getSession } from '@/lib/db/session'
 import { getBlogDir, blogsIndexPath } from '@/lib/db/paths'
 import fs from 'node:fs'
 import path from 'node:path'
-
-initDatabase()
 
 // 认证中间件
 function requireAuth(request: NextRequest): boolean {

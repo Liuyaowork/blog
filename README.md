@@ -1,164 +1,249 @@
-# 2025 Blog
+# YYsuni Blog — 二次开发版
 
-> 最新引导说明：https://www.yysuni.com/blog/readme
+> **原项目作者**: [YYsuni](https://github.com/yysuni)  
+> **原项目地址**: [2025-blog](https://github.com/yysuni/2025-blog)  
+> **本项目说明**: 本项目基于 YYsuni 的博客项目进行二次开发，在原项目基础上进行了全栈架构改造，感谢原作者的出色工作。
 
-该项目使用 Github App 管理项目内容，请保管好后续创建的 **Private key**，不要上传到公开网上。
+---
 
-## 1. 安装
+## 📖 项目简介
 
-使用该项目可以先不做本地开发，直接部署然后配置环境变量。具体变量名请看下列大写变量
+YYsuni Blog 是一个基于 **Next.js** 构建的现代化个人博客系统，支持文章展示、Markdown 渲染、标签分类等功能。
 
-```ts
-export const GITHUB_CONFIG = {
-	OWNER: process.env.NEXT_PUBLIC_GITHUB_OWNER || 'yysuni',
-	REPO: process.env.NEXT_PUBLIC_GITHUB_REPO || '2025-blog-public',
-	BRANCH: process.env.NEXT_PUBLIC_GITHUB_BRANCH || 'main',
-	APP_ID: process.env.NEXT_PUBLIC_GITHUB_APP_ID || '-'
-} as const
+### 原项目架构
+
+原项目为纯前端静态博客，依赖 **GitHub API** 进行数据管理：
+- 博客文章存储在 GitHub 仓库的 `public/blogs/` 目录
+- 站点配置存储在 `src/config/` 下的 JSON 文件
+- 点赞功能依赖外部 Cloudflare Workers API
+- 管理后台认证依赖 GitHub App OAuth
+- 部署平台为 Vercel / Cloudflare Pages
+
+### 二次开发新增功能
+
+本次二次开发对项目进行了全面重构，新增以下功能：
+
+#### 🐳 Docker 一键部署
+- 新增 `Dockerfile`（多阶段构建，缩小镜像体积）
+- 新增 `docker-compose.yml`（单容器运行，数据持久化）
+- 新增 `.dockerignore`
+- 新增容器启动初始化脚本 `scripts/docker-entrypoint.cjs`
+
+#### 🗄️ 本地数据存储（取代 GitHub API）
+- 移除所有 GitHub API 依赖（`github-client.ts`、GitHub OAuth 认证）
+- 所有运行数据存储在本地 `data/` 目录：
+  ```text
+  data/
+  ├── blog.db          ← SQLite 数据库
+  ├── blogs/           ← 博客文章文件
+  │   ├── index.json
+  │   └── {slug}/
+  │       ├── index.md
+  │       └── config.json
+  ├── images/          ← 上传的图片
+  │   ├── art/
+  │   ├── blogs/
+  │   └── avatar.png
+  └── config/          ← 站点配置
+      ├── site-content.json
+      └── card-styles.json
+  ```
+
+#### 🛢️ SQLite 数据库
+- 使用 **better-sqlite3** 作为嵌入式数据库
+- 数据库文件位于 `data/blog.db`
+- 包含 4 张表：
+  - `users` — 管理员用户
+  - `blogs` — 博客文章元数据
+  - `likes` — 点赞记录（含 24 小时频率限制）
+  - `sessions` — 登录会话
+
+#### 🔐 用户名+密码登录管理后台
+- 新增 `/login` 登录页面
+- 使用 **bcrypt** 加密密码存储
+- 基于 **Session** 的登录态管理（httpOnly Cookie）
+- 新增中间件保护 `/write/*` 管理路由
+
+#### 🌐 完整 RESTful API 体系
+| 接口 | 说明 |
+|------|------|
+| `POST /api/auth` | 用户登录 |
+| `GET /api/auth` | 验证登录状态 |
+| `DELETE /api/auth` | 退出登录 |
+| `GET /api/blogs` | 获取博客列表/单篇文章 |
+| `POST /api/blogs` | 创建/更新博客 |
+| `DELETE /api/blogs` | 删除博客 |
+| `GET /api/likes` | 获取点赞数 |
+| `POST /api/likes` | 点赞（含频率限制） |
+| `GET /api/config` | 获取站点配置 |
+| `POST /api/config` | 保存站点配置 |
+| `POST /api/upload` | 上传文件 |
+| `GET /api/images/[...path]` | 获取图片 |
+| `GET /api/setup` | 检查初始化状态 |
+| `POST /api/setup` | 初始化管理员账户（创建用户名和密码） |
+
+#### 🔄 前端数据流改造
+- 所有前端数据调用从直接读 `public/` 目录改为调用本地 API
+- 首页配置从静态导入改为动态 API 加载
+- 点赞组件从 Cloudflare Workers 改为本地 API
+- 博客写作/编辑/删除全部走本地 API
+
+#### 🛠️ 其他改进
+- 修复所有卡片组件（ArtCard、HiCard、NavCard、MusicCard 等）在配置未加载时的空值崩溃问题
+- 切换为 webpack 构建（替代 Turbopack）提高开发稳定性
+
+---
+
+## 🚀 快速开始
+
+### 环境要求
+
+- **Node.js**: 22.x 或更高版本
+- **pnpm**: 最新版
+- **Docker**（可选，用于容器部署）
+
+### 本地开发
+
+```bash
+# 1. 安装依赖
+pnpm install
+
+# 2. 迁移现有数据（首次运行）
+node scripts/migrate-data.mjs
+
+# 3. 导入数据到数据库（首次运行）
+node scripts/sync-db.cjs
+
+# 4. 启动开发服务器
+pnpm dev
 ```
 
-也可以自己手动先调整安装，可自行 `pnpm i`
+访问 `http://localhost:2025` 即可查看。
 
-## 2. 部署
+### 首次初始化（设置管理员用户名和密码）
 
-我这里熟悉 Vercel 部署，就以 Vercel 部署为例子。创建 Project => Import 这个项目
+> **首次运行必须设置管理员账户**，之后才能登录管理后台写博客。
 
-![](https://www.yysuni.com/blogs/readme/730266f17fab9717.png)
+#### 方式一：通过命令行设置（推荐）
 
-无需配置，直接点部署
-
-![](https://www.yysuni.com/blogs/readme/95dee9a69154d0d0.png)
-
-大约 60 秒会部署完成，有一个直接 vercel 域名，如：https://2025-blog-public.vercel.app/
-
-到这里部署网站已经完成了，下一步创建 Github App
-
-## 3. 创建 Github App 链接仓库
-
-在 github 个人设置里面，找到最下面的 Developer Settings ，点击进入
-
-![](https://www.yysuni.com/blogs/readme/0abb3b592cbedad6.png)
-
-进入开发者页面，点击 **New Github App**
-
-*GitHub App name* 和 *Homepage URL* , 输入什么都不影响。Webhook 也关闭，不需要。
-
-![](https://www.yysuni.com/blogs/readme/71dcd9cf8ec967c0.png)
-
-只需要注意设置一个仓库 write 权限，其它不用。
-
-![](https://www.yysuni.com/blogs/readme/2be290016e56cd34.png)
-
-点击创建，谁能安装这个仓库这个选择无所谓。直接创建。
-
-![](https://www.yysuni.com/blogs/readme/aa002e6805ab2d65.png)
-
-
-### 创建密钥
-
-创建好 Github App 后会提示必须创建一个 **Private Key**，直接创建，会自动下载（不见了也不要紧，后面自己再创建再下载就行）。页面上有个 **App ID** 需要复制一下
-
-再切换到安装页面
-
-![](https://www.yysuni.com/blogs/readme/c122b1585bb7a46a.png)
-
-这里一定要只**授权当前项目**。
-
-![](https://www.yysuni.com/blogs/readme/2cf1cee3b04326f1.png)
-
-点击安装，就完成了 Github App 管理该仓库的权限设置了。下一步就是让前端知道推送那个项目，就是最开始提到的环境变量。（如果你不会设置环境变量，直接改仓库文件 `src/consts.ts` 也行。因为是公开的，所以环境变量意义也不大）
-
-直接输入这几个环境变量值就行，一般只用设置 OWNER 和 APP_ID。其它配置不用管，直接输入创建就行。
-
-![](https://www.yysuni.com/blogs/readme/c5a049d737848abf.png)
-
-设置完成后，需要手动再部署一次，让环境变量生效。
-* 可以直接 push 一次仓库代码会触发部署
-* 也可以手动选择创建一次部署
-![](https://www.yysuni.com/blogs/readme/59a802ed8d1c3a13.png)
-
-## 4. 完成
-
-现在，部署的这个网站就可以开始使用前端改内容了。比如更改一个分享内容。
-
-**提示**，网站前端页面删改完提示成功之后，你需要等待后台的部署完成，再刷新页面才能完成服务器内容的更新哦。
-
-## 5. 删除
-
-使用这个项目应该第一件事需要删除我的 blog，单独删除，批量删除已完成。
-
-## 6. 配置
-
-大部分页面右上角都会有一个编辑按钮，意味着你可以使用 **private key** 进行配置部署。
-
-### 6.1 网站配置
-
-首页有一个不显眼的配置按钮，点击就能看到现在可以配置的内容。
-
-![](https://www.yysuni.com/blogs/readme/cddb4710e08a5069.png)
-
-## 7. 写 blog
-
-写 blog 的图片管理，可能会有疑惑。图片管理推荐逻辑是先点击 **+ 号** 添加图片，（推荐先压缩好，尺寸推荐宽度不超过 1200）。然后将上传好的图片直接拖入文案编辑区，这就已经添加好了，点击右上角预览就可以看到效果。
-
-## 8. 写给非前端
-
-非前端配置内容，还是需要一个文件指引。下面写一些更细致的代码配置。
-
-### 8.1 移除 Liquid Grass
-
-进入 `src/layout/index.tsx` 文件，删除两行代码，然后提交代码到你的 github
-```tsx
-const LiquidGrass = dynamic(() => import('@/components/liquid-grass'), { ssr: false })
-// 中间省略...
-<LiquidGrass /> // 第 53 行
+```bash
+# 创建管理员账户（替换为你的用户名和密码）
+curl -X POST http://localhost:2025/api/setup \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "your-password-123"}'
+# 返回: {"success":true,"message":"管理员账户创建成功"}
 ```
 
-![](https://www.yysuni.com/blogs/readme/f70ff3fe3a77f193.png)
+#### 方式二：通过 API 工具设置
 
-### 8.2 配置首页内容
+1. 访问 `http://localhost:2025/api/setup` 检查是否已初始化（返回 `{"initialized": false}` 表示未初始化）
+2. 发送 POST 请求到 `http://localhost:2025/api/setup`，请求体为 JSON：
+   ```json
+   {
+     "username": "admin",
+     "password": "your-password-123"
+   }
+   ```
+3. 收到 `{"success":true}` 即表示创建成功
 
-首页的内容现在只能前端配置一部分，所以代码更改在 `src/app/(home)` 目录，这个目录代表首页所有文件。首页的具体文件为  `src/app/(home)/page.tsx`
+> ⚠️ **注意**:
+> - `username` 为管理员用户名，建议使用 `admin`
+> - `password` 至少 6 位字符，请使用强密码
+> - 首次设置后不可重复初始化
+> - 忘记密码需直接操作 SQLite 数据库文件 `data/blog.db`
 
- ![](https://www.yysuni.com/blogs/readme/011679cd9bf73602.png)
+### 登录管理后台
 
-这里可以看到有很多 `Card` 文件，需要改那个首页 Card 内容就可以点入那个具体文件修改。
+1. 访问 `http://localhost:2025/login`（或点击首页的 **"管理员登录"** 按钮）
+2. 输入刚设置的用户名和密码
+3. 登录后首页按钮会变为 **"退出登录"**
+4. 进入 `/write` 页面即可写文章、管理博客
 
-比如中间的内容，为 `HiCard`，点击 `hi-card.tsx` 文件，即可更改其内容。
+### Docker 部署
 
-![](https://www.yysuni.com/blogs/readme/20b0791d012163ee.png)
+```bash
+# 1. 构建并启动
+docker compose up -d
 
-## 9. 互助群
+# 2. 查看日志
+docker compose logs -f
 
-对于完全不是**程序员**的用户，确实会对于更新代码后，如何同步，如何**合并代码**手足无措。我创建了一个 **QQ群**（加群会简单点），或者 vx 群还是 tg 群会好一点可以 issue 里面说下就行。
+# 3. 停止
+docker compose down
+```
 
-QQ 群：[https://qm.qq.com/q/spdpenr4k2](https://qm.qq.com/q/spdpenr4k2)
-> 不好意思，之前的那个qq群ID（1021438316），不知道为啥搜不到😂
+访问 `http://localhost:2025` 即可查看。
 
-微信群：刚建好了一个微信群，没有 qq 的可以用这个微信群
-![](https://www.yysuni.com/blogs/readme/343f2c62035b8e23.webp)
+> **注意**: Docker 首次启动时会自动从 `public/` 目录迁移数据到 `data/` 持久化卷，无需手动执行迁移脚本。
 
-tg 群：1月1号，才创建的 tg 群 https://t.me/public_blog_2025
+---
 
+## 📦 项目结构
 
-应该主要是我自己亲自帮助你们遇到问题怎么办。（后续看看有没有好心人）
+```
+├── Dockerfile                  # Docker 多阶段构建文件
+├── docker-compose.yml          # Docker Compose 配置
+├── .dockerignore
+├── next.config.ts              # Next.js 配置
+├── package.json
+├── tsconfig.json
+├── data/                       # 运行时数据目录
+│   ├── blog.db                 # SQLite 数据库
+│   ├── blogs/                  # 博客文章
+│   ├── images/                 # 图片文件
+│   └── config/                 # 配置文件
+├── scripts/
+│   ├── migrate-data.mjs        # 数据迁移脚本
+│   ├── sync-db.cjs             # 数据库同步脚本
+│   └── docker-entrypoint.cjs   # Docker 容器入口
+├── src/
+│   ├── app/
+│   │   ├── api/                # RESTful API 路由
+│   │   │   ├── auth/           # 认证接口
+│   │   │   ├── blogs/          # 博客 CRUD
+│   │   │   ├── likes/          # 点赞
+│   │   │   ├── config/         # 站点配置
+│   │   │   ├── upload/         # 文件上传
+│   │   │   ├── images/         # 图片服务
+│   │   │   └── setup/          # 初始化
+│   │   ├── login/              # 登录页面
+│   │   ├── (home)/             # 首页
+│   │   ├── blog/               # 博客列表/详情
+│   │   ├── write/              # 写博客
+│   │   └── ...
+│   ├── components/             # UI 组件
+│   ├── lib/
+│   │   ├── db/                 # 数据库
+│   │   │   ├── index.ts        # SQLite 初始化
+│   │   │   ├── session.ts      # Session 管理
+│   │   │   ├── paths.ts        # 数据路径工具
+│   │   │   └── schema.ts       # 数据库 Schema
+│   │   └── ...
+│   ├── hooks/                  # React Hooks
+│   ├── middleware.ts           # 路由中间件
+│   └── styles/                 # 样式文件
+└── public/                     # 静态资源
+```
 
-希望多多的非程序员加入 blogger 行列，web blog 还是很好玩的，属于自己的 blog 世界。
+---
 
-游戏资产不一定属于你的，你只有**使用权**，但这个 blog **网站、内容、仓库一定是属于你的**
+## 📜 技术栈
 
-#### 特殊的导航 Card
+| 类别 | 技术 |
+|------|------|
+| 框架 | Next.js 16, React 19 |
+| 语言 | TypeScript, JavaScript |
+| 样式 | TailwindCSS 4 |
+| 数据库 | SQLite (better-sqlite3) |
+| 认证 | bcryptjs + Session |
+| 构建 | webpack |
+| 容器化 | Docker + Docker Compose |
 
-因为这个 Card 是全局都在的，所以放在了 `src/components` 目录
+---
 
-![](https://www.yysuni.com/blogs/readme/9780c38f886322fd.png)
+## 📄 许可证
 
-## Star History
+本项目基于原项目进行二次开发，遵循原项目的开源许可证。
 
-<a href="https://www.star-history.com/#YYsuni/2025-blog-public&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=YYsuni/2025-blog-public&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=YYsuni/2025-blog-public&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=YYsuni/2025-blog-public&type=date&legend=top-left" />
- </picture>
-</a>
+**原项目**: [https://github.com/yysuni/2025-blog](https://github.com/yysuni/2025-blog)  
+**原作者**: [YYsuni](https://github.com/yysuni)

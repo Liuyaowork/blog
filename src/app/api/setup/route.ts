@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { sqlite, initDatabase } from '@/lib/db'
+import { sqlite } from '@/lib/db'
 
-// Ensure database is initialized
-initDatabase()
-
-/** GET /api/init/status - 检查是否已初始化 */
+/** GET /api/setup/status - 检查是否已初始化 */
 export async function GET() {
 	try {
 		const row = sqlite.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number }
@@ -15,7 +12,7 @@ export async function GET() {
 	}
 }
 
-/** POST /api/init/setup - 初始化管理员账户 */
+/** POST /api/setup - 初始化管理员账户 */
 export async function POST(request: NextRequest) {
 	try {
 		// Check if already initialized

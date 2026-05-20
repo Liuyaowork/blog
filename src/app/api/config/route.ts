@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/db/session'
 import { siteContentPath, cardStylesPath, getImagesDir } from '@/lib/db/paths'
-import { initDatabase } from '@/lib/db'
 import fs from 'node:fs'
 import path from 'node:path'
-
-initDatabase()
 
 function requireAuth(request: NextRequest): boolean {
 	const sessionId = request.cookies.get('session_id')?.value

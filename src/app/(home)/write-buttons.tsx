@@ -1,13 +1,15 @@
 import { ANIMATION_DELAY, CARD_SPACING } from '@/consts'
 import PenSVG from '@/svgs/pen.svg'
+import { LogIn } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useConfigStore } from './stores/config-store'
 import { useCenterStore } from '@/hooks/use-center'
 import { useRouter } from 'next/navigation'
 import { useSize } from '@/hooks/use-size'
 import DotsSVG from '@/svgs/dots.svg'
 import { HomeDraggableLayer } from './home-draggable-layer'
+import { toast } from 'sonner'
 
 export default function WriteButton() {
 	const center = useCenterStore()
@@ -19,10 +21,35 @@ export default function WriteButton() {
 	const clockCardStyles = cardStyles.clockCard || {}
 
 	const [show, setShow] = useState(false)
+	const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+	// 检查登录状态
+	const checkLoginStatus = useCallback(async () => {
+		try {
+			const res = await fetch('/api/auth', { method: 'GET' })
+			const data = await res.json()
+			setIsLoggedIn(data.authenticated === true)
+		} catch {
+			setIsLoggedIn(false)
+		}
+	}, [])
+
+	// 退出登录
+	const handleLogout = useCallback(async () => {
+		try {
+			await fetch('/api/auth', { method: 'DELETE' })
+			setIsLoggedIn(false)
+			toast.success('已退出登录')
+			router.refresh()
+		} catch {
+			toast.error('退出失败')
+		}
+	}, [router])
 
 	useEffect(() => {
 		setTimeout(() => setShow(true), (styles.order || 1) * ANIMATION_DELAY * 1000)
-	}, [styles.order])
+		checkLoginStatus()
+	}, [styles.order, checkLoginStatus])
 
 	if (maxSM) return null
 
@@ -56,6 +83,29 @@ export default function WriteButton() {
 					<PenSVG />
 					<span>写文章</span>
 				</motion.button>
+
+				{/* 登录/用户按钮 */}
+				<motion.button
+					initial={{ opacity: 0, scale: 0.6 }}
+					animate={{ opacity: 1, scale: 1 }}
+					whileHover={{ scale: 1.05 }}
+					whileTap={{ scale: 0.95 }}
+					onClick={() => {
+						if (isLoggedIn) {
+							handleLogout()
+						} else {
+							router.push('/login')
+						}
+					}}
+					style={{ boxShadow: 'inset 0 0 12px rgba(255, 255, 255, 0.4)' }}
+					className={isLoggedIn ? 'rounded-xl border bg-white/60 px-3 py-2 text-sm backdrop-blur-sm transition-colors hover:bg-white/80' : 'brand-btn whitespace-nowrap'}>
+					{isLoggedIn ? (
+						<span>退出登录</span>
+					) : (
+						<><LogIn className="h-4 w-4" /><span>管理员登录</span></>
+					)}
+				</motion.button>
+
 				<motion.button
 					initial={{ opacity: 0, scale: 0.6 }}
 					animate={{ opacity: 1, scale: 1 }}

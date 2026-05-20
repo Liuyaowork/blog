@@ -19,28 +19,21 @@ export default function Page() {
 	const [isPreviewMode, setIsPreviewMode] = useState(false)
 	const keyInputRef = useRef<HTMLInputElement>(null)
 
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuth, checkAuth } = useAuthStore()
 	const { siteContent } = useConfigStore()
 	const { content, loading } = useMarkdownRender(data.content)
 	const hideEditButton = siteContent.hideEditButton ?? false
 
-	const handleChoosePrivateKey = async (file: File) => {
-		try {
-			const text = await file.text()
-			setPrivateKey(text)
-			await handleSave()
-		} catch (error) {
-			console.error('Failed to read private key:', error)
-			toast.error('读取密钥文件失败')
-		}
-	}
+	useEffect(() => {
+		checkAuth()
+	}, [checkAuth])
 
 	const handleSaveClick = () => {
 		if (!isAuth) {
-			keyInputRef.current?.click()
-		} else {
-			handleSave()
+			toast.error('请先登录')
+			return
 		}
+		handleSave()
 	}
 
 	const handleEnterEditMode = () => {
@@ -91,18 +84,6 @@ export default function Page() {
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const f = e.target.files?.[0]
-					if (f) await handleChoosePrivateKey(f)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
-
 			<div className='flex flex-col items-center justify-center px-6 pt-32 pb-12 max-sm:px-0'>
 				<div className='w-full max-w-[800px]'>
 					{isEditMode ? (

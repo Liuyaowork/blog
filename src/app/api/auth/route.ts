@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { sqlite, initDatabase } from '@/lib/db'
+import { sqlite } from '@/lib/db'
 import { createSession, getSession, deleteSession } from '@/lib/db/session'
-
-// Ensure database is initialized
-initDatabase()
 
 /** POST /api/auth/login - 用户登录 */
 export async function POST(request: NextRequest) {
