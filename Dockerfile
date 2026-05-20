@@ -13,6 +13,7 @@ COPY package.json pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml* .npmrc* ./
 
 # Install dependencies
+RUN pnpm approve-builds
 RUN pnpm install --frozen-lockfile
 
 # Copy source code

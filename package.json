@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack -p 2025",
     "svg": "node scripts/gen-svgs-index.js",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "build:cf": "opennextjs-cloudflare build",
     "preview": "opennextjs-cloudflare preview",
