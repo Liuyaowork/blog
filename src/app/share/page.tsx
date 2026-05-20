@@ -8,11 +8,13 @@ import CreateDialog from './components/create-dialog'
 import { pushShares } from './services/push-shares'
 import { useAuthStore } from '@/hooks/use-auth'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
+import { useRouter } from 'next/navigation'
 import initialList from './list.json'
 import type { Share } from './components/share-card'
 import type { LogoItem } from './components/logo-upload-dialog'
 
 export default function Page() {
+	const router = useRouter()
 	const [shares, setShares] = useState<Share[]>(initialList as Share[])
 	const [originalShares, setOriginalShares] = useState<Share[]>(initialList as Share[])
 	const [isEditMode, setIsEditMode] = useState(false)
@@ -62,7 +64,7 @@ export default function Page() {
 
 	const handleSaveClick = () => {
 		if (!isAuth) {
-			toast.error('请先登录')
+			router.push('/login?redirect=' + encodeURIComponent('/share'))
 			return
 		}
 		handleSave()
@@ -95,7 +97,7 @@ export default function Page() {
 		setIsEditMode(false)
 	}
 
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuth ? '保存' : '登录'
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {

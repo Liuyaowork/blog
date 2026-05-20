@@ -61,7 +61,7 @@ export default function Page() {
 
 	const handleSaveClick = () => {
 		if (!isAuth) {
-			keyInputRef.current?.click()
+			router.push('/login?redirect=' + encodeURIComponent('/snippets'))
 		} else {
 			void handleSave()
 		}
@@ -120,7 +120,7 @@ export default function Page() {
 		setNewSnippet('')
 	}
 
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuth ? '保存' : '登录'
 
 	return (
 		<>

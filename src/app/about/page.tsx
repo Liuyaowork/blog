@@ -30,7 +30,7 @@ export default function Page() {
 
 	const handleSaveClick = () => {
 		if (!isAuth) {
-			toast.error('请先登录')
+			router.push('/login?redirect=' + encodeURIComponent('/about'))
 			return
 		}
 		handleSave()
@@ -65,7 +65,7 @@ export default function Page() {
 		setIsPreviewMode(false)
 	}
 
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuth ? '保存' : '登录'
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {

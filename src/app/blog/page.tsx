@@ -7,6 +7,7 @@ import { motion } from 'motion/react'
 
 dayjs.extend(weekOfYear)
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { INIT_DELAY } from '@/consts'
 import ShortLineSVG from '@/svgs/short-line.svg'
@@ -26,6 +27,7 @@ import { CategoryModal } from './components/category-modal'
 type DisplayMode = 'day' | 'week' | 'month' | 'year' | 'category'
 
 export default function BlogPage() {
+	const router = useRouter()
 	const { items, loading } = useBlogIndex()
 	const { categories: categoriesFromServer } = useCategories()
 	const { isRead } = useReadArticles()
@@ -132,7 +134,7 @@ export default function BlogPage() {
 	}, [displayItems, displayMode, categoryList])
 
 	const selectedCount = selectedSlugs.size
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuth ? '保存' : '登录'
 
 	const toggleEditMode = useCallback(() => {
 		if (editMode) {
@@ -283,11 +285,11 @@ export default function BlogPage() {
 
 	const handleSaveClick = useCallback(() => {
 		if (!isAuth) {
-			toast.error('请先登录')
+			router.push('/login?redirect=' + encodeURIComponent('/blog'))
 			return
 		}
 		void handleSave()
-	}, [handleSave, isAuth])
+	}, [handleSave, isAuth, router])
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {

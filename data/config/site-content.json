@@ -1,8 +1,8 @@
 {
   "meta": {
-    "title": "YYsuni",
-    "description": "YYsuni 的个人博客，记录前端开发、探索、笔记。前端 UI 更新代码仓库。",
-    "username": "Suni"
+    "title": "Blog",
+    "description": "Liuyao的个人博客，记录前端开发、探索、笔记。前端 UI 更新代码仓库。",
+    "username": "Liuyao"
   },
   "theme": {
     "colorBrand": "#2fcbe7",
@@ -73,7 +73,7 @@
   "hatFlipped": false,
   "enableChristmas": false,
   "beian": {
-    "text": "",
+    "text": "备案号926332",
     "link": ""
   }
 }
