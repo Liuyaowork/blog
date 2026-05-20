@@ -1,5 +1,5 @@
 {
 	"title": "关于本站",
-	"description": "一个基于 Github 的现代化博客系统",
-	"content": "📦网站基于 Github 仓库完全存储，所有内容版本可控\n\n🚀无后端，无 serverless function，纯静态站点\n\n✏️文章通过可视化 UI 直接编辑并提交到 Github 仓库\n\n🔑所有用户都可以编辑，提交需要 Owner 的 Private Key\n\n## 技术栈\n\n- Next.js\n- React\n- TypeScript\n- Tailwind CSS\n- Motion\n- Github API"
+	"description": "一个基于 Next.js 构建的现代化个人博客系统，支持本地部署与 Docker 一键运行。",
+	"content": "## 项目简介\n\n本站是基于 [YYsuni](https://github.com/yysuni) 原项目进行二次开发的个人博客系统。原项目是一个基于 Next.js 的现代化静态博客，依赖 GitHub API 进行数据管理。\n\n本次二次开发对项目进行了全面重构，将其改造为一个可独立部署的全栈应用：\n\n- **Docker 一键部署**：支持通过 Docker Compose 快速部署，方便项目更新维护\n- **本地数据存储**：使用 SQLite + 文件系统代替 GitHub API，所有运行数据保存在网站本地 `data` 目录下\n- **用户认证系统**：以用户名+密码形式登录网站管理后台\n- **完整 RESTful API**：提供完整的本地 API 接口体系\n- **本地点赞系统**：支持 24 小时 IP 频率限制\n\n## 技术栈\n\n| 类别 | 技术 |\n|------|------|\n| 框架 | Next.js 16, React 19 |\n| 语言 | TypeScript |\n| 样式 | TailwindCSS 4 |\n| 数据库 | SQLite (better-sqlite3) |\n| 认证 | bcryptjs + Session |\n| 容器化 | Docker + Docker Compose |\n| 包管理 | pnpm |\n\n## 许可\n\n本项目基于原项目进行二次开发，遵循原项目的开源许可证。\n\n> 原项目地址：[https://github.com/yysuni/2025-blog](https://github.com/yysuni/2025-blog)\n> 原作者：[@YYsuni](https://github.com/yysuni)"
 }

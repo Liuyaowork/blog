@@ -7,11 +7,13 @@ import { useMarkdownRender } from '@/hooks/use-markdown-render'
 import { pushAbout, type AboutData } from './services/push-about'
 import { useAuthStore } from '@/hooks/use-auth'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
+import { useRouter } from 'next/navigation'
 import LikeButton from '@/components/like-button'
 import GithubSVG from '@/svgs/github.svg'
 import initialData from './list.json'
 
 export default function Page() {
+	const router = useRouter()
 	const [data, setData] = useState<AboutData>(initialData as AboutData)
 	const [originalData, setOriginalData] = useState<AboutData>(initialData as AboutData)
 	const [isEditMode, setIsEditMode] = useState(false)

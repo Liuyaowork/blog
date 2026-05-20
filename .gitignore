@@ -44,5 +44,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# local data (runtime generated, not committed)
+/data/blog.db
+/data/blog.db-shm
+/data/blog.db-wal
+
 #vscode
 .history/
