@@ -22,11 +22,11 @@ export default function HiCard() {
 	const center = useCenterStore()
 	const { cardStyles, siteContent } = useConfigStore()
 	const greeting = getGreeting()
-	const styles = cardStyles.hiCard
-	const username = siteContent.meta.username || 'Suni'
+	const styles = cardStyles.hiCard || {}
+	const username = siteContent.meta?.username || 'Suni'
 
-	const x = styles.offsetX !== null ? center.x + styles.offsetX : center.x - styles.width / 2
-	const y = styles.offsetY !== null ? center.y + styles.offsetY : center.y - styles.height / 2
+	const x = styles.offsetX != null ? center.x + styles.offsetX : center.x - (styles.width || 400) / 2
+	const y = styles.offsetY != null ? center.y + styles.offsetY : center.y - (styles.height || 100) / 2
 
 	return (
 		<HomeDraggableLayer cardKey='hiCard' x={x} y={y} width={styles.width} height={styles.height}>

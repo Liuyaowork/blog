@@ -66,8 +66,8 @@ export default function NavCard() {
 	const { maxSM } = useSize()
 	const [hoveredIndex, setHoveredIndex] = useState<number>(0)
 	const { siteContent, cardStyles } = useConfigStore()
-	const styles = cardStyles.navCard
-	const hiCardStyles = cardStyles.hiCard
+	const styles = cardStyles.navCard || {}
+	const hiCardStyles = cardStyles.hiCard || {}
 
 	const activeIndex = useMemo(() => {
 		const index = list.findIndex(item => pathname === item.href)
@@ -89,8 +89,8 @@ export default function NavCard() {
 
 	let position = useMemo(() => {
 		if (form === 'full') {
-			const x = styles.offsetX !== null ? center.x + styles.offsetX : center.x - hiCardStyles.width / 2 - styles.width - CARD_SPACING
-			const y = styles.offsetY !== null ? center.y + styles.offsetY : center.y + hiCardStyles.height / 2 - styles.height
+			const x = styles.offsetX != null ? center.x + styles.offsetX : center.x - (hiCardStyles.width || 400) / 2 - (styles.width || 100) - CARD_SPACING
+			const y = styles.offsetY != null ? center.y + styles.offsetY : center.y + (hiCardStyles.height || 100) / 2 - (styles.height || 200)
 			return { x, y }
 		}
 
@@ -103,7 +103,7 @@ export default function NavCard() {
 	const size = useMemo(() => {
 		if (form === 'mini') return { width: 64, height: 64 }
 		else if (form === 'icons') return { width: 340, height: 64 }
-		else return { width: styles.width, height: styles.height }
+		else return { width: styles.width || 100, height: styles.height || 200 }
 	}, [form, styles])
 
 	useEffect(() => {

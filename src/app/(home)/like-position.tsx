@@ -8,18 +8,18 @@ import { HomeDraggableLayer } from './home-draggable-layer'
 export default function LikePosition() {
 	const center = useCenterStore()
 	const { cardStyles, siteContent } = useConfigStore()
-	const styles = cardStyles.likePosition
-	const hiCardStyles = cardStyles.hiCard
-	const socialButtonsStyles = cardStyles.socialButtons
-	const musicCardStyles = cardStyles.musicCard
-	const shareCardStyles = cardStyles.shareCard
+	const styles = cardStyles.likePosition || {}
+	const hiCardStyles = cardStyles.hiCard || {}
+	const socialButtonsStyles = cardStyles.socialButtons || {}
+	const musicCardStyles = cardStyles.musicCard || {}
+	const shareCardStyles = cardStyles.shareCard || {}
 
 	const x =
-		styles.offsetX !== null ? center.x + styles.offsetX : center.x + hiCardStyles.width / 2 - socialButtonsStyles.width + shareCardStyles.width + CARD_SPACING
+		styles.offsetX != null ? center.x + styles.offsetX : center.x + (hiCardStyles.width || 400) / 2 - (socialButtonsStyles.width || 200) + (shareCardStyles.width || 200) + CARD_SPACING
 	const y =
-		styles.offsetY !== null
+		styles.offsetY != null
 			? center.y + styles.offsetY
-			: center.y + hiCardStyles.height / 2 + CARD_SPACING + socialButtonsStyles.height + CARD_SPACING + musicCardStyles.height + CARD_SPACING
+			: center.y + (hiCardStyles.height || 100) / 2 + CARD_SPACING + (socialButtonsStyles.height || 100) + CARD_SPACING + (musicCardStyles.height || 0) + CARD_SPACING
 
 	return (
 		<HomeDraggableLayer cardKey='likePosition' x={x} y={y} width={styles.width} height={styles.height}>
@@ -35,7 +35,7 @@ export default function LikePosition() {
 					</>
 				)}
 
-				<LikeButton delay={cardStyles.shareCard.order * ANIMATION_DELAY * 1000} />
+				<LikeButton delay={((cardStyles.shareCard || {}).order || 1) * ANIMATION_DELAY * 1000} />
 			</motion.div>
 		</HomeDraggableLayer>
 	)

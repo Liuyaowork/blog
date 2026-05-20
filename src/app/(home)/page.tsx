@@ -22,10 +22,14 @@ import SnowfallBackground from '@/layout/backgrounds/snowfall'
 
 export default function Home() {
 	const { maxSM } = useSize()
-	const { cardStyles, configDialogOpen, setConfigDialogOpen, siteContent } = useConfigStore()
+	const { cardStyles, configDialogOpen, setConfigDialogOpen, siteContent, loadConfig, loading } = useConfigStore()
 	const editing = useLayoutEditStore(state => state.editing)
 	const saveEditing = useLayoutEditStore(state => state.saveEditing)
 	const cancelEditing = useLayoutEditStore(state => state.cancelEditing)
+
+	useEffect(() => {
+		loadConfig()
+	}, [loadConfig])
 
 	const handleSave = () => {
 		saveEditing()
@@ -50,6 +54,15 @@ export default function Home() {
 			window.removeEventListener('keydown', handleKeyDown)
 		}
 	}, [setConfigDialogOpen])
+
+	// 配置加载中时显示加载状态
+	if (loading) {
+		return (
+			<div className='flex h-screen items-center justify-center'>
+				<div className='text-secondary text-sm'>加载中...</div>
+			</div>
+		)
+	}
 
 	return (
 		<>

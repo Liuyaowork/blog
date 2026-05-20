@@ -22,9 +22,9 @@ export default function ShareCard() {
 	const center = useCenterStore()
 	const { cardStyles, siteContent } = useConfigStore()
 	const [randomItem, setRandomItem] = useState<ShareItem | null>(null)
-	const styles = cardStyles.shareCard
-	const hiCardStyles = cardStyles.hiCard
-	const socialButtonsStyles = cardStyles.socialButtons
+	const styles = cardStyles.shareCard || {}
+	const hiCardStyles = cardStyles.hiCard || {}
+	const socialButtonsStyles = cardStyles.socialButtons || {}
 
 	useEffect(() => {
 		const randomIndex = Math.floor(Math.random() * shareList.length)
@@ -35,8 +35,8 @@ export default function ShareCard() {
 		return null
 	}
 
-	const x = styles.offsetX !== null ? center.x + styles.offsetX : center.x + hiCardStyles.width / 2 - socialButtonsStyles.width
-	const y = styles.offsetY !== null ? center.y + styles.offsetY : center.y + hiCardStyles.height / 2 + CARD_SPACING + socialButtonsStyles.height + CARD_SPACING
+	const x = styles.offsetX != null ? center.x + styles.offsetX : center.x + (hiCardStyles.width || 400) / 2 - (socialButtonsStyles.width || 200)
+	const y = styles.offsetY != null ? center.y + styles.offsetY : center.y + (hiCardStyles.height || 100) / 2 + CARD_SPACING + (socialButtonsStyles.height || 100) + CARD_SPACING
 
 	return (
 		<HomeDraggableLayer cardKey='shareCard' x={x} y={y} width={styles.width} height={styles.height}>

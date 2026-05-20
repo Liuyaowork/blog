@@ -1,5 +1,4 @@
 import { NextConfig } from 'next'
-import { codeInspectorPlugin } from 'code-inspector-plugin'
 
 const nextConfig: NextConfig = {
 	devIndicators: false,
@@ -10,21 +9,12 @@ const nextConfig: NextConfig = {
 		ignoreBuildErrors: true
 	},
 	experimental: {
-		scrollRestoration: false
+		scrollRestoration: false,
+		serverExternalPackages: ['better-sqlite3']
 	},
-	turbopack: {
-		rules: {
-			'*.svg': {
-				loaders: ['@svgr/webpack'],
-				as: '*.js'
-			}
-			// ...codeInspectorPlugin({
-			// 	bundler: 'turbopack'
-			// })
-		},
-
-		resolveExtensions: ['.mdx', '.tsx', '.ts', '.jsx', '.js', '.mjs', '.json', 'css']
-	},
+	// Docker 部署需要 standalone 输出
+	output: 'standalone',
+	// 使用 webpack 而不是 turbopack 以获得更好的稳定性
 	webpack: config => {
 		config.module.rules.push({
 			test: /\.svg$/i,

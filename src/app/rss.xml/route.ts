@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import siteContent from '@/config/site-content.json'
-import blogIndex from '@/../public/blogs/index.json'
 import type { BlogIndexItem } from '@/app/blog/types'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.yysuni.com'
@@ -10,8 +9,24 @@ const FEED_PATH = '/rss.xml'
 const SITE_ORIGIN = SITE_URL.replace(/\/$/, '')
 const FEED_URL = `${SITE_ORIGIN}${FEED_PATH}`
 const PUBLIC_DIR = path.join(process.cwd(), 'public')
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data')
 
-const blogs = blogIndex as BlogIndexItem[]
+// Try to load blog index from data directory first, fall back to public
+let blogs: BlogIndexItem[] = []
+try {
+	const indexPath = path.join(DATA_DIR, 'blogs', 'index.json')
+	if (fs.existsSync(indexPath)) {
+		blogs = JSON.parse(fs.readFileSync(indexPath, 'utf-8'))
+	}
+} catch {
+	try {
+		// Fallback to public directory
+		const { default: blogIndex } = await import('@/../public/blogs/index.json')
+		blogs = blogIndex as BlogIndexItem[]
+	} catch {
+		blogs = []
+	}
+}
 
 const escapeXml = (value: string): string =>
 	value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')

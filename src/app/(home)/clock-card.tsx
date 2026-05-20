@@ -15,8 +15,8 @@ export default function ClockCard() {
 	const { cardStyles, siteContent } = useConfigStore()
 	const editing = useLayoutEditStore(state => state.editing)
 	const [time, setTime] = useState(new Date())
-	const styles = cardStyles.clockCard
-	const hiCardStyles = cardStyles.hiCard
+	const styles = cardStyles.clockCard || {}
+	const hiCardStyles = cardStyles.hiCard || {}
 	const showSeconds = siteContent.clockShowSeconds ?? false
 
 	useEffect(() => {
@@ -32,8 +32,8 @@ export default function ClockCard() {
 	const minutes = time.getMinutes().toString().padStart(2, '0')
 	const seconds = time.getSeconds().toString().padStart(2, '0')
 
-	const x = styles.offsetX !== null ? center.x + styles.offsetX : center.x + CARD_SPACING + hiCardStyles.width / 2
-	const y = styles.offsetY !== null ? center.y + styles.offsetY : center.y - styles.offset - styles.height
+	const x = styles.offsetX != null ? center.x + styles.offsetX : center.x + CARD_SPACING + (hiCardStyles.width || 400) / 2
+	const y = styles.offsetY != null ? center.y + styles.offsetY : center.y - (styles.offset || 0) - (styles.height || 100)
 
 	return (
 		<HomeDraggableLayer cardKey='clockCard' x={x} y={y} width={styles.width} height={styles.height}>

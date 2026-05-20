@@ -18,10 +18,10 @@ export default function MusicCard() {
 	const pathname = usePathname()
 	const center = useCenterStore()
 	const { cardStyles, siteContent } = useConfigStore()
-	const styles = cardStyles.musicCard
-	const hiCardStyles = cardStyles.hiCard
-	const clockCardStyles = cardStyles.clockCard
-	const calendarCardStyles = cardStyles.calendarCard
+	const styles = cardStyles.musicCard || {}
+	const hiCardStyles = cardStyles.hiCard || {}
+	const clockCardStyles = cardStyles.clockCard || {}
+	const calendarCardStyles = cardStyles.calendarCard || {}
 
 	const [isPlaying, setIsPlaying] = useState(false)
 	const [currentIndex, setCurrentIndex] = useState(0)
@@ -35,15 +35,15 @@ export default function MusicCard() {
 		// If not on home page, always position at bottom-right corner when playing
 		if (!isHomePage) {
 			return {
-				x: center.width - styles.width - 16,
-				y: center.height - styles.height - 16
+			x: center.width - (styles.width || 60) - 16,
+			y: center.height - (styles.height || 60) - 16
 			}
 		}
 
 		// Default position on home page
 		return {
-			x: styles.offsetX !== null ? center.x + styles.offsetX : center.x + CARD_SPACING + hiCardStyles.width / 2 - styles.offset,
-			y: styles.offsetY !== null ? center.y + styles.offsetY : center.y - clockCardStyles.offset + CARD_SPACING + calendarCardStyles.height + CARD_SPACING
+			x: styles.offsetX != null ? center.x + styles.offsetX : center.x + CARD_SPACING + (hiCardStyles.width || 400) / 2 - (styles.offset || 0),
+			y: styles.offsetY != null ? center.y + styles.offsetY : center.y - (clockCardStyles.offset || 0) + CARD_SPACING + (calendarCardStyles.height || 200) + CARD_SPACING
 		}
 	}, [isPlaying, isHomePage, center, styles, hiCardStyles, clockCardStyles, calendarCardStyles])
 

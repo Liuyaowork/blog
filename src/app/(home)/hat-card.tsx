@@ -10,13 +10,13 @@ export default function HatCard() {
 	const center = useCenterStore()
 	const { cardStyles, siteContent } = useConfigStore()
 	const { maxSM } = useSize()
-	const styles = cardStyles.hatCard
+	const styles = cardStyles.hatCard || {}
 
 	const [show, setShow] = useState(false)
 	const [number, setNumber] = useState(1)
 
 	useEffect(() => {
-		setTimeout(() => setShow(true), styles.order * ANIMATION_DELAY * 1000)
+		setTimeout(() => setShow(true), (styles.order || 1) * ANIMATION_DELAY * 1000)
 	}, [styles.order])
 
 	const hatIndex = siteContent.currentHatIndex ?? 1
@@ -26,8 +26,8 @@ export default function HatCard() {
 
 	if (!show) return null
 
-	const x = styles.offsetX !== null ? center.x + styles.offsetX : center.x - styles.width / 2
-	const y = styles.offsetY !== null ? center.y + styles.offsetY : center.y - styles.height
+	const x = styles.offsetX != null ? center.x + styles.offsetX : center.x - (styles.width || 100) / 2
+	const y = styles.offsetY != null ? center.y + styles.offsetY : center.y - (styles.height || 100)
 
 	return (
 		<HomeDraggableLayer cardKey='hatCard' x={x} y={y} width={styles.width} height={styles.height}>

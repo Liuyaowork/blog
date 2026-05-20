@@ -52,8 +52,8 @@ export default function SocialButtons() {
 	const center = useCenterStore()
 	const { cardStyles, siteContent } = useConfigStore()
 	const { maxSM, init } = useSize()
-	const styles = cardStyles.socialButtons
-	const hiCardStyles = cardStyles.hiCard
+	const styles = cardStyles.socialButtons || {}
+	const hiCardStyles = cardStyles.hiCard || {}
 	const order = maxSM && init ? 0 : styles.order
 	const delay = maxSM && init ? 0 : 100
 

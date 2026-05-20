@@ -18,12 +18,12 @@ export default function CalendarCard() {
 	const firstDayWeekday = (firstDayOfMonth.day() + 6) % 7
 	const daysInMonth = now.daysInMonth()
 	const currentWeekday = (now.day() + 6) % 7
-	const styles = cardStyles.calendarCard
-	const hiCardStyles = cardStyles.hiCard
-	const clockCardStyles = cardStyles.clockCard
+	const styles = cardStyles.calendarCard || {}
+	const hiCardStyles = cardStyles.hiCard || {}
+	const clockCardStyles = cardStyles.clockCard || {}
 
-	const x = styles.offsetX !== null ? center.x + styles.offsetX : center.x + CARD_SPACING + hiCardStyles.width / 2
-	const y = styles.offsetY !== null ? center.y + styles.offsetY : center.y - clockCardStyles.offset + CARD_SPACING
+	const x = styles.offsetX != null ? center.x + styles.offsetX : center.x + CARD_SPACING + (hiCardStyles.width || 400) / 2
+	const y = styles.offsetY != null ? center.y + styles.offsetY : center.y - (clockCardStyles.offset || 0) + CARD_SPACING
 
 	return (
 		<HomeDraggableLayer cardKey='calendarCard' x={x} y={y} width={styles.width} height={styles.height}>

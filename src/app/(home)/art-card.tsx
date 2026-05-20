@@ -9,11 +9,11 @@ export default function ArtCard() {
 	const center = useCenterStore()
 	const { cardStyles, siteContent } = useConfigStore()
 	const router = useRouter()
-	const styles = cardStyles.artCard
-	const hiCardStyles = cardStyles.hiCard
+	const styles = cardStyles.artCard || {}
+	const hiCardStyles = cardStyles.hiCard || {}
 
-	const x = styles.offsetX !== null ? center.x + styles.offsetX : center.x - styles.width / 2
-	const y = styles.offsetY !== null ? center.y + styles.offsetY : center.y - hiCardStyles.height / 2 - styles.height - CARD_SPACING
+	const x = styles.offsetX != null ? center.x + styles.offsetX : center.x - (styles.width || 300) / 2
+	const y = styles.offsetY != null ? center.y + styles.offsetY : center.y - (hiCardStyles.height || 200) - (styles.height || 200) - CARD_SPACING
 
 	const artImages = siteContent.artImages ?? []
 	const currentId = siteContent.currentArtImageId

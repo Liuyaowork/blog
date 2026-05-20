@@ -14,22 +14,22 @@ export default function WriteButton() {
 	const { cardStyles, setConfigDialogOpen, siteContent } = useConfigStore()
 	const { maxSM } = useSize()
 	const router = useRouter()
-	const styles = cardStyles.writeButtons
-	const hiCardStyles = cardStyles.hiCard
-	const clockCardStyles = cardStyles.clockCard
+	const styles = cardStyles.writeButtons || {}
+	const hiCardStyles = cardStyles.hiCard || {}
+	const clockCardStyles = cardStyles.clockCard || {}
 
 	const [show, setShow] = useState(false)
 
 	useEffect(() => {
-		setTimeout(() => setShow(true), styles.order * ANIMATION_DELAY * 1000)
+		setTimeout(() => setShow(true), (styles.order || 1) * ANIMATION_DELAY * 1000)
 	}, [styles.order])
 
 	if (maxSM) return null
 
 	if (!show) return null
 
-	const x = styles.offsetX !== null ? center.x + styles.offsetX : center.x + CARD_SPACING + hiCardStyles.width / 2
-	const y = styles.offsetY !== null ? center.y + styles.offsetY : center.y - clockCardStyles.offset - styles.height - CARD_SPACING / 2 - clockCardStyles.height
+	const x = styles.offsetX != null ? center.x + styles.offsetX : center.x + CARD_SPACING + (hiCardStyles.width || 400) / 2
+	const y = styles.offsetY != null ? center.y + styles.offsetY : center.y - (clockCardStyles.offset || 0) - (styles.height || 40) - CARD_SPACING / 2 - (clockCardStyles.height || 100)
 
 	return (
 		<HomeDraggableLayer cardKey='writeButtons' x={x} y={y} width={styles.width} height={styles.height}>
