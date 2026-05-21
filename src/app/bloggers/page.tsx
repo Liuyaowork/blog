@@ -30,22 +30,18 @@ export default function Page() {
 		checkAuth()
 	}, [checkAuth])
 
-	const handleUpdate = (updatedBlogger: Blogger, oldBlogger: Blogger, avatarItem?: AvatarItem) => {
-		setBloggers(prev => prev.map(b => (b.url === oldBlogger.url ? updatedBlogger : b)))
-		if (avatarItem) {
-			setAvatarItems(prev => {
-				const newMap = new Map(prev)
-				newMap.set(updatedBlogger.url, avatarItem)
-				return newMap
+	// 从 API 加载最新数据（支持 Docker 持久化卷）
+	useEffect(() => {
+		fetch('/api/save-list?file=bloggers/list.json')
+			.then(res => res.ok ? res.json() : null)
+			.then(data => {
+				if (data) {
+					setBloggers(data as Blogger[])
+					setOriginalBloggers(data as Blogger[])
+				}
 			})
-		}
-	}
-
-	const handleAdd = () => {
-		setEditingBlogger(null)
-		setIsCreateDialogOpen(true)
-	}
-
+			.catch(() => {/* 使用静态导入的默认数据 */})
+	}, [])
 	const handleSaveBlogger = (updatedBlogger: Blogger) => {
 		if (editingBlogger) {
 			const updated = bloggers.map(b => (b.url === editingBlogger.url ? updatedBlogger : b))

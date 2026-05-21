@@ -31,22 +31,18 @@ export default function Page() {
 		checkAuth()
 	}, [checkAuth])
 
-	const handleUpdate = (updatedShare: Share, oldShare: Share, logoItem?: LogoItem) => {
-		setShares(prev => prev.map(s => (s.url === oldShare.url ? updatedShare : s)))
-		if (logoItem) {
-			setLogoItems(prev => {
-				const newMap = new Map(prev)
-				newMap.set(updatedShare.url, logoItem)
-				return newMap
+	// 从 API 加载最新数据（支持 Docker 持久化卷）
+	useEffect(() => {
+		fetch('/api/save-list?file=share/list.json')
+			.then(res => res.ok ? res.json() : null)
+			.then(data => {
+				if (data) {
+					setShares(data as Share[])
+					setOriginalShares(data as Share[])
+				}
 			})
-		}
-	}
-
-	const handleAdd = () => {
-		setEditingShare(null)
-		setIsCreateDialogOpen(true)
-	}
-
+			.catch(() => {/* 使用静态导入的默认数据 */})
+	}, [])
 	const handleSaveShare = (updatedShare: Share) => {
 		if (editingShare) {
 			const updated = shares.map(s => (s.url === editingShare.url ? updatedShare : s))

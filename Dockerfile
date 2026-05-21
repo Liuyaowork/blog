@@ -68,7 +68,7 @@ ENV PORT=2025
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:2025/ || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:2025/ || exit 1
 
 # Start the application
 COPY scripts/docker-entrypoint.cjs ./scripts/docker-entrypoint.cjs

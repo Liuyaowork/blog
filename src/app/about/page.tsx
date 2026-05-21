@@ -30,22 +30,18 @@ export default function Page() {
 		checkAuth()
 	}, [checkAuth])
 
-	const handleSaveClick = () => {
-		if (!isAuth) {
-			router.push('/login?redirect=' + encodeURIComponent('/about'))
-			return
-		}
-		handleSave()
-	}
-
-	const handleEnterEditMode = () => {
-		setIsEditMode(true)
-		setIsPreviewMode(false)
-	}
-
-	const handleSave = async () => {
-		setIsSaving(true)
-
+	// 从 API 加载最新数据（支持 Docker 持久化卷）
+	useEffect(() => {
+		fetch('/api/save-list?file=about/list.json')
+			.then(res => res.ok ? res.json() : null)
+			.then(newData => {
+				if (newData) {
+					setData(newData as AboutData)
+					setOriginalData(newData as AboutData)
+				}
+			})
+			.catch(() => {/* 使用静态导入的默认数据 */})
+	}, [])
 		try {
 			await pushAbout(data)
 

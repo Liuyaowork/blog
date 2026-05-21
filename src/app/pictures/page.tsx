@@ -37,21 +37,18 @@ export default function Page() {
 		checkAuth()
 	}, [checkAuth])
 
-	const handleUploadSubmit = ({ images, description }: { images: ImageItem[]; description: string }) => {
-		const now = new Date().toISOString()
-
-		if (images.length === 0) {
-			toast.error('请至少选择一张图片')
-			return
-		}
-
-		const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`
-		const desc = description.trim() || undefined
-
-		const imageUrls = images.map(imageItem => (imageItem.type === 'url' ? imageItem.url : imageItem.previewUrl))
-
-		const newPicture: Picture = {
-			id,
+	// 从 API 加载最新数据（支持 Docker 持久化卷）
+	useEffect(() => {
+		fetch('/api/save-list?file=pictures/list.json')
+			.then(res => res.ok ? res.json() : null)
+			.then(data => {
+				if (data) {
+					setPictures(data as Picture[])
+					setOriginalPictures(data as Picture[])
+				}
+			})
+			.catch(() => {/* 使用静态导入的默认数据 */})
+	}, [])
 			uploadedAt: now,
 			description: desc,
 			images: imageUrls

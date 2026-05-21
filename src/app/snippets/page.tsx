@@ -30,6 +30,20 @@ export default function Page() {
 		checkAuth()
 	}, [checkAuth])
 
+	// 从 API 加载最新数据（支持 Docker 持久化卷）
+	useEffect(() => {
+		fetch('/api/save-list?file=snippets/list.json')
+			.then(res => res.ok ? res.json() : null)
+			.then(data => {
+				if (data && Array.isArray(data)) {
+					setSnippets(data as string[])
+					setOriginalSnippets(data as string[])
+					setCurrentSnippet(getRandomSnippet(data as string[]))
+				}
+			})
+			.catch(() => {/* 使用静态导入的默认数据 */})
+	}, [])
+
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (!isEditMode && (e.ctrlKey || e.metaKey) && e.key === ',') {

@@ -30,22 +30,18 @@ export default function Page() {
 		checkAuth()
 	}, [checkAuth])
 
-	const handleUpdate = (updatedProject: Project, oldProject: Project, imageItem?: ImageItem) => {
-		setProjects(prev => prev.map(p => (p.url === oldProject.url ? updatedProject : p)))
-		if (imageItem) {
-			setImageItems(prev => {
-				const newMap = new Map(prev)
-				newMap.set(updatedProject.url, imageItem)
-				return newMap
+	// 从 API 加载最新数据（支持 Docker 持久化卷）
+	useEffect(() => {
+		fetch('/api/save-list?file=projects/list.json')
+			.then(res => res.ok ? res.json() : null)
+			.then(data => {
+				if (data) {
+					setProjects(data as Project[])
+					setOriginalProjects(data as Project[])
+				}
 			})
-		}
-	}
-
-	const handleAdd = () => {
-		setEditingProject(null)
-		setIsCreateDialogOpen(true)
-	}
-
+			.catch(() => {/* 使用静态导入的默认数据 */})
+	}, [])
 	const handleSaveProject = (updatedProject: Project) => {
 		if (editingProject) {
 			const updated = projects.map(p => (p.url === editingProject.url ? updatedProject : p))
