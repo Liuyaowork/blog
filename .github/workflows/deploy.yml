@@ -1,0 +1,153 @@
+name: Deploy Blog
+
+on:
+  # 推送到 main 分支时触发部署
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - '.github/**'
+      - 'scripts/**'
+      - 'data/**'
+  # 允许手动触发部署
+  workflow_dispatch:
+
+env:
+  # 应用配置
+  APP_NAME: yysuni-blog
+  CONTAINER_NAME: yysuni-blog
+  # 数据卷名称（需与 docker-compose.yml 一致）
+  VOLUME_NAME: yysuni-blog-data
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    # 避免并发部署冲突
+    concurrency:
+      group: deploy-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      # 1. 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 设置 Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3. 登录阿里云 ACR（容器镜像服务）
+      - name: Log in to Alibaba Cloud ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      # 4. 生成版本标签
+      - name: Generate version tags
+        id: tags
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          DATE_TAG=$(date -u +'%Y%m%d-%H%M%S')
+          echo "tag=${DATE_TAG}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "latest_tag=latest" >> $GITHUB_OUTPUT
+
+      # 5. 构建并推送 Docker 镜像到阿里云 ACR
+      - name: Build and push Docker image to ACR
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.ACR_REGISTRY }}/${{ env.APP_NAME }}:${{ steps.tags.outputs.tag }}
+            ${{ secrets.ACR_REGISTRY }}/${{ env.APP_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 6. 通过 SSH 部署到阿里云服务器
+      - name: Deploy to Alibaba Cloud ECS
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            # ============================================================
+            # 部署脚本：从阿里云 ACR 拉取镜像 → 重启容器（保留数据卷）
+            # ============================================================
+
+            set -e
+
+            echo "=== 开始部署到阿里云 ECS ==="
+
+            # ========== 配置区域 ==========
+            REGISTRY="${{ secrets.ACR_REGISTRY }}"
+            IMAGE_NAME="${{ env.APP_NAME }}"
+            IMAGE_TAG="latest"
+            IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            CONTAINER="${{ env.CONTAINER_NAME }}"
+            VOLUME="${{ env.VOLUME_NAME }}"
+            NETWORK="blog-network"
+            # ==============================
+
+            # 登录阿里云 ACR（服务器端拉取镜像需要认证）
+            echo "登录阿里云 ACR..."
+            echo "${{ secrets.ACR_PASSWORD }}" | docker login $REGISTRY \
+              --username ${{ secrets.ACR_USERNAME }} --password-stdin
+
+            # 确保 Docker 网络存在
+            docker network inspect $NETWORK >/dev/null 2>&1 || docker network create $NETWORK
+
+            # 拉取最新镜像（从阿里云 ACR，国内速度极快）
+            echo "从阿里云 ACR 拉取最新镜像..."
+            docker pull $IMAGE
+
+            # 停止并删除旧容器（如果存在）
+            echo "停止旧容器..."
+            docker stop $CONTAINER 2>/dev/null || true
+            docker rm $CONTAINER 2>/dev/null || true
+
+            # 启动新容器（挂载数据卷持久化数据）
+            echo "启动新容器..."
+            docker run -d \
+              --name $CONTAINER \
+              --network $NETWORK \
+              --restart unless-stopped \
+              -p 2025:2025 \
+              -v ${VOLUME}:/app/data \
+              -e NODE_ENV=production \
+              -e NEXT_TELEMETRY_DISABLED=1 \
+              -e PORT=2025 \
+              -e HOSTNAME=0.0.0.0 \
+              -e DATA_DIR=/app/data \
+              -e BLOG_SLUG_KEY="${{ secrets.BLOG_SLUG_KEY }}" \
+              -e SITE_URL="${{ secrets.SITE_URL }}" \
+              -e NEXT_PUBLIC_SITE_URL="${{ secrets.NEXT_PUBLIC_SITE_URL }}" \
+              --memory "512m" \
+              --cpus "1.0" \
+              $IMAGE
+
+            # 登出 ACR（清理凭证）
+            docker logout $REGISTRY
+
+            # 清理旧镜像（保留最近使用的镜像）
+            echo "清理旧镜像..."
+            docker image prune -a -f --filter "until=72h" || true
+
+            # 检查容器运行状态
+            echo "检查容器状态..."
+            sleep 5
+            if [ "$(docker inspect -f '{{.State.Running}}' $CONTAINER)" = "true" ]; then
+              echo "✅ 部署成功！容器 $CONTAINER 正在运行"
+              echo "容器日志："
+              docker logs --tail 20 $CONTAINER
+            else
+              echo "❌ 部署失败！容器未能正常启动"
+              docker logs $CONTAINER
+              exit 1
+            fi
+
+            echo "=== 部署完成 ==="
