@@ -365,7 +365,17 @@ docker compose down
 
 ---
 
-## 📦 项目结构
+## � GitHub Actions 自动部署
+
+本项目支持通过 **GitHub Actions** 实现 CI/CD 自动部署到 CentOS 服务器。
+
+### 工作流程
+
+```
+开发者推送代码 → GitHub Actions 构建 Docker 镜像 → 推送到 Docker Hub → SSH 连接服务器 → 拉取镜像重启容器（保留数据卷）
+```
+
+## �📦 项目结构
 
 ```
 ├── Dockerfile                  # Docker 多阶段构建文件
@@ -379,10 +389,15 @@ docker compose down
 │   ├── blogs/                  # 博客文章
 │   ├── images/                 # 图片文件
 │   └── config/                 # 配置文件
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          # GitHub Actions 自动部署工作流
 ├── scripts/
 │   ├── migrate-data.mjs        # 数据迁移脚本
 │   ├── sync-db.cjs             # 数据库同步脚本
-│   └── docker-entrypoint.cjs   # Docker 容器入口
+│   ├── docker-entrypoint.cjs   # Docker 容器入口
+│   ├── deploy.sh               # 服务器手动部署脚本
+│   └── backup-data.sh          # 数据卷备份脚本
 ├── src/
 │   ├── app/
 │   │   ├── api/                # RESTful API 路由

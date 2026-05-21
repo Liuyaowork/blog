@@ -18,6 +18,8 @@ env:
   CONTAINER_NAME: yysuni-blog
   # 数据卷名称（需与 docker-compose.yml 一致）
   VOLUME_NAME: yysuni-blog-data
+  # ACR 命名空间（镜像地址格式：registry/namespace/repo:tag）
+  ACR_NAMESPACE: liuyao_blog
 
 jobs:
   build-and-deploy:
@@ -61,8 +63,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.ACR_REGISTRY }}/${{ env.APP_NAME }}:${{ steps.tags.outputs.tag }}
-            ${{ secrets.ACR_REGISTRY }}/${{ env.APP_NAME }}:latest
+            ${{ secrets.ACR_REGISTRY }}/${{ env.ACR_NAMESPACE }}/${{ env.APP_NAME }}:${{ steps.tags.outputs.tag }}
+            ${{ secrets.ACR_REGISTRY }}/${{ env.ACR_NAMESPACE }}/${{ env.APP_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -85,9 +87,10 @@ jobs:
 
             # ========== 配置区域 ==========
             REGISTRY="${{ secrets.ACR_REGISTRY }}"
+            ACR_NAMESPACE="${{ env.ACR_NAMESPACE }}"
             IMAGE_NAME="${{ env.APP_NAME }}"
             IMAGE_TAG="latest"
-            IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            IMAGE="${REGISTRY}/${ACR_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
             CONTAINER="${{ env.CONTAINER_NAME }}"
             VOLUME="${{ env.VOLUME_NAME }}"
             NETWORK="blog-network"
