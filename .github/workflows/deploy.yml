@@ -6,8 +6,8 @@ on:
     branches: [main]
     paths-ignore:
       - 'README.md'
-      - '.github/**'
-      - 'scripts/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
       - 'data/**'
   # 允许手动触发部署
   workflow_dispatch:
@@ -93,11 +93,6 @@ jobs:
             NETWORK="blog-network"
             # ==============================
 
-            # 登录阿里云 ACR（服务器端拉取镜像需要认证）
-            echo "登录阿里云 ACR..."
-            echo "${{ secrets.ACR_PASSWORD }}" | docker login $REGISTRY \
-              --username ${{ secrets.ACR_USERNAME }} --password-stdin
-
             # 确保 Docker 网络存在
             docker network inspect $NETWORK >/dev/null 2>&1 || docker network create $NETWORK
 
@@ -129,9 +124,6 @@ jobs:
               --memory "512m" \
               --cpus "1.0" \
               $IMAGE
-
-            # 登出 ACR（清理凭证）
-            docker logout $REGISTRY
 
             # 清理旧镜像（保留最近使用的镜像）
             echo "清理旧镜像..."
