@@ -112,7 +112,6 @@ YYsuni Blog 是一个基于 **Next.js** 构建的现代化个人博客系统，�
 | **Docker** | 最新版（可选） | 用于容器化部署 |
 
 > ⚠️ **重要**：`better-sqlite3` 是一个原生 C++ 模块，安装时会通过 `node-gyp` 自动编译。因此系统必须安装 **Python 3.8+** 和 **支持 C++20 的编译器**，否则 `pnpm install` 将失败。
-
 #### 📦 Linux 各发行版依赖安装指南
 
 以下是在常见 Linux 云服务器上安装所需依赖的命令。
@@ -206,7 +205,7 @@ pnpm --version
 </details>
 
 <details>
-<summary><b>🟢 Ubuntu / Debian</b></summary>
+<summary><b>🟢 Ubuntu / Debian 13+</b></summary>
 
 ```bash
 # 1. 更新包索引
@@ -215,7 +214,7 @@ apt update && apt upgrade -y
 # 2. 安装 Python 3.8+ 及构建工具
 apt install -y python3 python3-pip
 
-# 3. 安装 GCC 及相关工具（Ubuntu 22.04+ 默认 GCC 11+，已支持 C++20）
+# 3. 安装 GCC 及相关工具（Ubuntu 22.04+ / Debian 13+ 默认 GCC 11+，已支持 C++20）
 apt install -y build-essential gcc g++ make
 gcc --version
 
@@ -233,31 +232,8 @@ apt install -y docker.io docker-compose-v2
 systemctl enable docker && systemctl start docker
 ```
 
-> 💡 **提示**：Ubuntu 22.04 及以上版本的默认 GCC 版本已足够，无需额外配置。
-> 如果使用 Ubuntu 20.04（GCC 9.x），建议先升级 GCC：`apt install -y gcc-11 g++-11`。
-</details>
-
-<details>
-<summary><b>🟢 Fedora</b></summary>
-
-```bash
-# 1. 安装 Python 及构建工具
-dnf install -y python3 python3-pip gcc gcc-c++ make
-
-# 2. 安装 Node.js 22.x
-curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
-dnf install -y nodejs
-node --version
-
-# 3. 配置 pnpm
-corepack enable && corepack prepare pnpm@11.1.3 --activate
-
-# 4. （可选）安装 Docker
-dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-systemctl enable docker && systemctl start docker
-```
-
-> 💡 Fedora 默认 GCC 版本较高，直接安装即可。
+> 💡 **提示**：Ubuntu 22.04 / Debian 13 及以上版本的默认 GCC 版本已足够，无需额外配置。
+> 如果使用较旧的 Ubuntu 版本（如 20.04，GCC 9.x），建议先升级 GCC：`apt install -y gcc-11 g++-11`。
 </details>
 
 <details>
@@ -285,7 +261,10 @@ apk add --no-cache python3 py3-pip g++ make
 
 ```bash
 # 构建并启动（会自动安装所有环境依赖）
-docker compose up -d
+docker compose up -d --build
+
+# 查看容器运行状态
+docker ps
 
 # 查看构建日志
 docker compose logs -f
@@ -368,7 +347,10 @@ curl -X POST http://localhost:2025/api/setup \
 
 ```bash
 # 1. 构建并启动
-docker compose up -d
+docker compose up -d --build
+
+# 查看容器运行状态
+docker ps
 
 # 2. 查看日志
 docker compose logs -f
@@ -450,5 +432,5 @@ docker compose down
 
 本项目基于原项目进行二次开发，遵循原项目的开源许可证。
 
-**原项目**: [https://github.com/yysuni/2025-blog](https://github.com/yysuni/2025-blog)  
+**原项目**: [https://github.com/YYsuni/2025-blog-public](https://github.com/YYsuni/2025-blog-public)  
 **原作者**: [YYsuni](https://github.com/yysuni)
