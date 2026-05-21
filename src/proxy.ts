@@ -6,7 +6,7 @@ const PROTECTED_ROUTES = [
 	'/_write',
 ]
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl
 
 	// 检查是否是需要保护的路由
