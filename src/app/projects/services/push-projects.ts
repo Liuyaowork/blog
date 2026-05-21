@@ -1,10 +1,5 @@
-import { toBase64Utf8, getRef, createTree, createCommit, updateRef, createBlob, type TreeItem } from '@/lib/github-client'
-import { fileToBase64NoPrefix, hashFileSHA256 } from '@/lib/file-utils'
-import { getAuthToken } from '@/lib/auth'
-import { GITHUB_CONFIG } from '@/consts'
 import type { Project } from '../components/project-card'
 import type { ImageItem } from '../components/image-upload-dialog'
-import { getFileExt } from '@/lib/utils'
 import { toast } from 'sonner'
 
 export type PushProjectsParams = {
@@ -15,65 +10,52 @@ export type PushProjectsParams = {
 export async function pushProjects(params: PushProjectsParams): Promise<void> {
 	const { projects, imageItems } = params
 
-	const token = await getAuthToken()
-
-	toast.info('正在获取分支信息...')
-	const refData = await getRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`)
-	const latestCommitSha = refData.sha
-
-	const commitMessage = `更新项目列表`
-
-	toast.info('正在准备文件...')
-
-	const treeItems: TreeItem[] = []
-	const uploadedHashes = new Set<string>()
+	toast.info('正在上传图片...')
 	let updatedProjects = [...projects]
 
 	if (imageItems && imageItems.size > 0) {
-		toast.info('正在上传图片...')
 		for (const [url, imageItem] of imageItems.entries()) {
 			if (imageItem.type === 'file') {
-				const hash = imageItem.hash || (await hashFileSHA256(imageItem.file))
-				const ext = getFileExt(imageItem.file.name)
-				const filename = `${hash}${ext}`
-				const publicPath = `/images/project/${filename}`
+				const formData = new FormData()
+				formData.append('file', imageItem.file)
+				formData.append('subDir', 'project')
 
-				if (!uploadedHashes.has(hash)) {
-					const path = `public/images/project/${filename}`
-					const contentBase64 = await fileToBase64NoPrefix(imageItem.file)
-					const blobData = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, contentBase64, 'base64')
-					treeItems.push({
-						path,
-						mode: '100644',
-						type: 'blob',
-						sha: blobData.sha
-					})
-					uploadedHashes.add(hash)
+				const uploadRes = await fetch('/api/upload', {
+					method: 'POST',
+					credentials: 'include',
+					body: formData
+				})
+
+				if (!uploadRes.ok) {
+					const errText = await uploadRes.text()
+					let errMsg: string
+					try { errMsg = JSON.parse(errText).error || '上传失败' } catch { errMsg = errText || '上传失败' }
+					throw new Error(errMsg)
 				}
+
+				const uploadData = await uploadRes.json()
+				const publicPath = uploadData.url
 
 				updatedProjects = updatedProjects.map(p => (p.url === url ? { ...p, image: publicPath } : p))
 			}
 		}
 	}
 
-	const projectsJson = JSON.stringify(updatedProjects, null, '\t')
-	const projectsBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(projectsJson), 'base64')
-	treeItems.push({
-		path: 'src/app/projects/list.json',
-		mode: '100644',
-		type: 'blob',
-		sha: projectsBlob.sha
+	toast.info('正在保存项目列表...')
+	const saveRes = await fetch('/api/save-list', {
+		method: 'POST',
+		credentials: 'include',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ file: 'projects/list.json', data: updatedProjects })
 	})
 
-	toast.info('正在创建文件树...')
-	const treeData = await createTree(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, treeItems, latestCommitSha)
+	if (!saveRes.ok) {
+		const errText = await saveRes.text()
+		let errMsg: string
+		try { errMsg = JSON.parse(errText).error || '保存失败' } catch { errMsg = errText || '保存失败' }
+		throw new Error(errMsg)
+	}
 
-	toast.info('正在创建提交...')
-	const commitData = await createCommit(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, commitMessage, treeData.sha, [latestCommitSha])
-
-	toast.info('正在更新分支...')
-	await updateRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`, commitData.sha)
-
-	toast.success('发布成功！')
+	toast.success('保存成功！')
 }
 

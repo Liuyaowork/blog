@@ -13,6 +13,15 @@
 }
 
 @layer base {
+	/* 防止 hydration 前样式闪烁：页面加载完成后才显示内容 */
+	html:not(.hydrated) main {
+		opacity: 0;
+	}
+	html.hydrated main {
+		opacity: 1;
+		transition: opacity 0.35s ease-in-out;
+	}
+
 	html {
 		@apply text-primary bg-bg h-full leading-tight;
 		scroll-behavior: smooth;

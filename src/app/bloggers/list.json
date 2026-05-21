@@ -5,5 +5,12 @@
 		"url": "https://www.ruanyifeng.com/blog/archives.html",
 		"description": "经典必看，每周更新。无聊是看新闻、还是学习、还是拓展眼界，都是能其中获取到乐趣的。还有很多网友的每周留言。这就是 blog 的含金量。",
 		"stars": 5
+	},
+	{
+		"name": "测试",
+		"avatar": "blob:http://127.0.0.1:2025/cf133ee5-8883-4f33-b878-698b0eef68dc",
+		"url": "测试",
+		"description": "测试",
+		"stars": 3
 	}
 ]

@@ -47,6 +47,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 					if (/windows|win32/i.test(navigator.userAgent)) {
 						document.documentElement.classList.add('windows');
 					}
+					// 防止 FOUC：在 React hydration 完成后逐步显示内容
+					function hydrate() {
+						document.documentElement.classList.add('hydrated');
+					}
+					if (document.readyState === 'complete') {
+						hydrate();
+					} else {
+						window.addEventListener('load', hydrate);
+					}
 		      `
 					}}
 				/>
