@@ -14,7 +14,7 @@ on:
 
 env:
   # 应用配置
-  APP_NAME: yysuni-blog
+  APP_NAME: liuyao_blog_app
   CONTAINER_NAME: yysuni-blog
   # 数据卷名称（需与 docker-compose.yml 一致）
   VOLUME_NAME: yysuni-blog-data
