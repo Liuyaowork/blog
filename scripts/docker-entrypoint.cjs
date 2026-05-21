@@ -46,6 +46,40 @@ if (needsMigration) {
 	console.log('data 目录已有数据，跳过迁移')
 }
 
+// 确保 config 数据存在
+const defaultConfigDir = '/app/default-config'
+if (!fs.existsSync(dataConfigDir) || fs.readdirSync(dataConfigDir).length === 0) {
+	console.log('检测到 config 目录为空，正在从默认配置初始化...')
+	if (!fs.existsSync(dataConfigDir)) fs.mkdirSync(dataConfigDir, { recursive: true })
+
+	if (fs.existsSync(defaultConfigDir)) {
+		copyDirSync(defaultConfigDir, dataConfigDir)
+		console.log('✅ 配置数据已从默认配置恢复')
+	} else {
+		// 创建最小默认配置
+		const defaultSiteContent = {
+			meta: { title: 'YYsuni', description: '', username: 'Suni' },
+			theme: {},
+			backgroundColors: [],
+			artImages: [],
+			backgroundImages: [],
+			socialButtons: [],
+			clockShowSeconds: false,
+			summaryInContent: false,
+			isCachePem: false,
+			hideEditButton: false,
+			enableCategories: true,
+			currentHatIndex: 3,
+			hatFlipped: false,
+			enableChristmas: false,
+			beian: { text: '', link: '' }
+		}
+		fs.writeFileSync(path.join(dataConfigDir, 'site-content.json'), JSON.stringify(defaultSiteContent, null, 2))
+		fs.writeFileSync(path.join(dataConfigDir, 'card-styles.json'), JSON.stringify({}, null, 2))
+		console.log('✅ 已创建默认配置')
+	}
+}
+
 console.log('=== 启动 Next.js 服务器 ===')
 
 // 启动 Next.js 服务

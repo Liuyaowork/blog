@@ -1,26 +1,26 @@
-'use client'
+﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'motion/react'
 import { toast } from 'sonner'
-import GridView, { type Blogger } from './grid-view'
+import { ProjectCard, type Project } from './components/project-card'
 import CreateDialog from './components/create-dialog'
-import { pushBloggers } from './services/push-bloggers'
+import { pushProjects } from './services/push-projects'
 import { useAuthStore } from '@/hooks/use-auth'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
 import { useRouter } from 'next/navigation'
 import initialList from './list.json'
-import type { AvatarItem } from './components/avatar-upload-dialog'
+import type { ImageItem } from './components/image-upload-dialog'
 
 export default function Page() {
 	const router = useRouter()
-	const [bloggers, setBloggers] = useState<Blogger[]>(initialList as Blogger[])
-	const [originalBloggers, setOriginalBloggers] = useState<Blogger[]>(initialList as Blogger[])
+	const [projects, setProjects] = useState<Project[]>(initialList as Project[])
+	const [originalProjects, setOriginalProjects] = useState<Project[]>(initialList as Project[])
 	const [isEditMode, setIsEditMode] = useState(false)
 	const [isSaving, setIsSaving] = useState(false)
-	const [editingBlogger, setEditingBlogger] = useState<Blogger | null>(null)
+	const [editingProject, setEditingProject] = useState<Project | null>(null)
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-	const [avatarItems, setAvatarItems] = useState<Map<string, AvatarItem>>(new Map())
+	const [imageItems, setImageItems] = useState<Map<string, ImageItem>>(new Map())
 
 	const { isAuth, checkAuth } = useAuthStore()
 	const { siteContent } = useConfigStore()
@@ -30,53 +30,40 @@ export default function Page() {
 		checkAuth()
 	}, [checkAuth])
 
-	// 从 API 加载最新数据（支持 Docker 持久化卷）
-	useEffect(() => {
-		fetch('/api/save-list?file=bloggers/list.json')
-			.then(res => res.ok ? res.json() : null)
-			.then(data => {
-				if (data) {
-					setBloggers(data as Blogger[])
-					setOriginalBloggers(data as Blogger[])
-				}
-			})
-			.catch(() => {/* 使用静态导入的默认数据 */})
-	}, [])
-
-	const handleUpdate = (updatedBlogger: Blogger, oldBlogger: Blogger, avatarItem?: AvatarItem) => {
-		setBloggers(prev => prev.map(b => (b.url === oldBlogger.url ? updatedBlogger : b)))
-		if (avatarItem) {
-			setAvatarItems(prev => {
+	const handleUpdate = (updatedProject: Project, oldProject: Project, imageItem?: ImageItem) => {
+		setProjects(prev => prev.map(p => (p.url === oldProject.url ? updatedProject : p)))
+		if (imageItem) {
+			setImageItems(prev => {
 				const newMap = new Map(prev)
-				newMap.set(updatedBlogger.url, avatarItem)
+				newMap.set(updatedProject.url, imageItem)
 				return newMap
 			})
 		}
 	}
 
 	const handleAdd = () => {
-		setEditingBlogger(null)
+		setEditingProject(null)
 		setIsCreateDialogOpen(true)
 	}
 
-	const handleSaveBlogger = (updatedBlogger: Blogger) => {
-		if (editingBlogger) {
-			const updated = bloggers.map(b => (b.url === editingBlogger.url ? updatedBlogger : b))
-			setBloggers(updated)
+	const handleSaveProject = (updatedProject: Project) => {
+		if (editingProject) {
+			const updated = projects.map(p => (p.url === editingProject.url ? updatedProject : p))
+			setProjects(updated)
 		} else {
-			setBloggers([...bloggers, updatedBlogger])
+			setProjects([...projects, updatedProject])
 		}
 	}
 
-	const handleDelete = (blogger: Blogger) => {
-		if (confirm(`确定要删除 ${blogger.name} 吗？`)) {
-			setBloggers(bloggers.filter(b => b.url !== blogger.url))
+	const handleDelete = (project: Project) => {
+		if (confirm(`纭畾瑕佸垹闄?${project.name} 鍚楋紵`)) {
+			setProjects(projects.filter(p => p.url !== project.url))
 		}
 	}
 
 	const handleSaveClick = () => {
 		if (!isAuth) {
-			router.push('/login?redirect=' + encodeURIComponent('/bloggers'))
+			router.push('/login?redirect=' + encodeURIComponent('/projects'))
 			return
 		}
 		handleSave()
@@ -86,30 +73,30 @@ export default function Page() {
 		setIsSaving(true)
 
 		try {
-			await pushBloggers({
-				bloggers,
-				avatarItems
+			await pushProjects({
+				projects,
+				imageItems
 			})
 
-			setOriginalBloggers(bloggers)
-			setAvatarItems(new Map())
+			setOriginalProjects(projects)
+			setImageItems(new Map())
 			setIsEditMode(false)
-			toast.success('保存成功！')
+			toast.success('淇濆瓨鎴愬姛锛?)
 		} catch (error: any) {
 			console.error('Failed to save:', error)
-			toast.error(`保存失败: ${error?.message || '未知错误'}`)
+			toast.error(`淇濆瓨澶辫触: ${error?.message || '鏈煡閿欒'}`)
 		} finally {
 			setIsSaving(false)
 		}
 	}
 
 	const handleCancel = () => {
-		setBloggers(originalBloggers)
-		setAvatarItems(new Map())
+		setProjects(originalProjects)
+		setImageItems(new Map())
 		setIsEditMode(false)
 	}
 
-	const buttonText = isAuth ? '保存' : '登录'
+	const buttonText = isAuth ? '淇濆瓨' : '鐧诲綍'
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -127,7 +114,13 @@ export default function Page() {
 
 	return (
 		<>
-			<GridView bloggers={bloggers} isEditMode={isEditMode} onUpdate={handleUpdate} onDelete={handleDelete} />
+			<div className='flex flex-col items-center justify-center px-6 pt-32 pb-12'>
+				<div className='grid w-full max-w-[1200px] grid-cols-2 gap-6 max-md:grid-cols-1'>
+					{projects.map((project, index) => (
+						<ProjectCard key={project.url} project={project} isEditMode={isEditMode} onUpdate={handleUpdate} onDelete={() => handleDelete(project)} />
+					))}
+				</div>
+			</div>
 
 			<motion.div initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} className='absolute top-4 right-6 flex gap-3 max-sm:hidden'>
 				{isEditMode ? (
@@ -138,17 +131,17 @@ export default function Page() {
 							onClick={handleCancel}
 							disabled={isSaving}
 							className='rounded-xl border bg-white/60 px-6 py-2 text-sm'>
-							取消
+							鍙栨秷
 						</motion.button>
 						<motion.button
 							whileHover={{ scale: 1.05 }}
 							whileTap={{ scale: 0.95 }}
 							onClick={handleAdd}
 							className='rounded-xl border bg-white/60 px-6 py-2 text-sm'>
-							添加
+							娣诲姞
 						</motion.button>
 						<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleSaveClick} disabled={isSaving} className='brand-btn px-6'>
-							{isSaving ? '保存中...' : buttonText}
+							{isSaving ? '淇濆瓨涓?..' : buttonText}
 						</motion.button>
 					</>
 				) : (
@@ -158,13 +151,13 @@ export default function Page() {
 							whileTap={{ scale: 0.95 }}
 							onClick={() => setIsEditMode(true)}
 							className='bg-card rounded-xl border px-6 py-2 text-sm backdrop-blur-sm transition-colors hover:bg-white/80'>
-							编辑
+							缂栬緫
 						</motion.button>
 					)
 				)}
 			</motion.div>
 
-			{isCreateDialogOpen && <CreateDialog blogger={editingBlogger} onClose={() => setIsCreateDialogOpen(false)} onSave={handleSaveBlogger} />}
+			{isCreateDialogOpen && <CreateDialog project={editingProject} onClose={() => setIsCreateDialogOpen(false)} onSave={handleSaveProject} />}
 		</>
 	)
 }

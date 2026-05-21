@@ -42,6 +42,18 @@ export default function Page() {
 			})
 			.catch(() => {/* 使用静态导入的默认数据 */})
 	}, [])
+
+	const handleSaveClick = () => {
+		if (!isAuth) {
+			router.push('/login?redirect=' + encodeURIComponent('/about'))
+			return
+		}
+		handleSave()
+	}
+
+	const handleSave = async () => {
+		setIsSaving(true)
+
 		try {
 			await pushAbout(data)
 
@@ -64,6 +76,11 @@ export default function Page() {
 	}
 
 	const buttonText = isAuth ? '保存' : '登录'
+
+	const handleEnterEditMode = () => {
+		setIsEditMode(true)
+		setIsPreviewMode(false)
+	}
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {

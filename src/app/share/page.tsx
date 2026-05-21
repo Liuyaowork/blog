@@ -43,6 +43,23 @@ export default function Page() {
 			})
 			.catch(() => {/* 使用静态导入的默认数据 */})
 	}, [])
+
+	const handleUpdate = (updatedShare: Share, oldShare: Share, logoItem?: LogoItem) => {
+		setShares(prev => prev.map(s => (s.url === oldShare.url ? updatedShare : s)))
+		if (logoItem) {
+			setLogoItems(prev => {
+				const newMap = new Map(prev)
+				newMap.set(updatedShare.url, logoItem)
+				return newMap
+			})
+		}
+	}
+
+	const handleAdd = () => {
+		setEditingShare(null)
+		setIsCreateDialogOpen(true)
+	}
+
 	const handleSaveShare = (updatedShare: Share) => {
 		if (editingShare) {
 			const updated = shares.map(s => (s.url === editingShare.url ? updatedShare : s))

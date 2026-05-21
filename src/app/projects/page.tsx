@@ -42,6 +42,23 @@ export default function Page() {
 			})
 			.catch(() => {/* 使用静态导入的默认数据 */})
 	}, [])
+
+	const handleUpdate = (updatedProject: Project, oldProject: Project, imageItem?: ImageItem) => {
+		setProjects(prev => prev.map(p => (p.url === oldProject.url ? updatedProject : p)))
+		if (imageItem) {
+			setImageItems(prev => {
+				const newMap = new Map(prev)
+				newMap.set(updatedProject.url, imageItem)
+				return newMap
+			})
+		}
+	}
+
+	const handleAdd = () => {
+		setEditingProject(null)
+		setIsCreateDialogOpen(true)
+	}
+
 	const handleSaveProject = (updatedProject: Project) => {
 		if (editingProject) {
 			const updated = projects.map(p => (p.url === editingProject.url ? updatedProject : p))

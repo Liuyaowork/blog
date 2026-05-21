@@ -49,6 +49,22 @@ export default function Page() {
 			})
 			.catch(() => {/* 使用静态导入的默认数据 */})
 	}, [])
+
+	const handleUploadSubmit = ({ images, description }: { images: ImageItem[]; description: string }) => {
+		const now = new Date().toISOString()
+
+		if (images.length === 0) {
+			toast.error('请至少选择一张图片')
+			return
+		}
+
+		const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`
+		const desc = description.trim() || undefined
+
+		const imageUrls = images.map(imageItem => (imageItem.type === 'url' ? imageItem.url : imageItem.previewUrl))
+
+		const newPicture: Picture = {
+			id,
 			uploadedAt: now,
 			description: desc,
 			images: imageUrls

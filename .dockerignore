@@ -7,6 +7,9 @@ node_modules
 **/blog.db
 **/blog.db-shm
 **/blog.db-wal
-data/
+data/blogs/
+data/images/
+data/lists/
+data/blog.db*
 .env.local
 .env*.local

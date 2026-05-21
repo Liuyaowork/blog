@@ -53,6 +53,9 @@ COPY --from=builder /app/package.json ./package.json
 # Copy node_modules for better-sqlite3 native addon
 COPY --from=builder /app/node_modules ./node_modules
 
+# Create default config for volume initialization
+RUN mkdir -p /app/default-config && echo '{"meta":{"title":"YYsuni","description":"","username":"Suni"},"theme":{},"backgroundColors":[],"artImages":[],"backgroundImages":[],"socialButtons":[],"clockShowSeconds":false,"summaryInContent":false,"isCachePem":false,"hideEditButton":false,"enableCategories":true,"currentHatIndex":3,"hatFlipped":false,"enableChristmas":false,"beian":{"text":"","link":""}}' > /app/default-config/site-content.json && echo '{}' > /app/default-config/card-styles.json
+
 # Create data directory with proper permissions
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
